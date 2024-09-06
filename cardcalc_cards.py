@@ -41,7 +41,7 @@ def _handle_draw_events(card_events, start_time, end_time):
     for event in card_events:
         # check if cast and draw
         # print(" >>> event: {} id: {} timestamp: {} time: {}".format(event['type'], event['abilityGameID'], event['timestamp'], str(timedelta(milliseconds=(event['timestamp']-start_time)))[2:11]))
-        if event['type'] == 'cast' and event['abilityGameID'] in [3590]:
+        if event['type'] == 'cast' and event['abilityGameID'] in [37018, 37017]:
             # if event is attached to active window then just update that information
             if active_window.start == event['timestamp']:
                 active_window.castId = event['abilityGameID']
@@ -100,6 +100,7 @@ def _handle_draw_events(card_events, start_time, end_time):
                 draw = draw_set[0]
                 draw.buffId = event['abilityGameID']
                 draw.cardDrawn = DrawWindow.GetCard(draw.buffId)
+
 
     active_window.end = end_time
     active_window.endEvent = DrawWindow.GetName(-1)

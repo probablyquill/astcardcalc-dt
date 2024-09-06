@@ -198,7 +198,7 @@ query reportData($code: String!, $startTime: Float!, $endTime: Float!) {
             cardPlayEvents: events(
                 startTime: $startTime, 
                 endTime: $endTime
-                filterExpression: "ability.id in (1001883, 1001886, 1001887, 1001882, 1001884, 1001885, 4401, 4402, 4403, 4404, 4405, 4406)"
+                filterExpression: "ability.id in (1003887, 37023, 1003889, 37026)"
             ) {
                 data
             }
@@ -226,7 +226,7 @@ query reportData($code: String!, $startTime: Float!, $endTime: Float!) {
             draws: events(
                 startTime: $startTime,
                 endTime: $endTime,
-                filterExpression: "ability.id in (3590, 1000915, 1000913, 1000914, 1000917, 1000916, 1000918)"
+                filterExpression: "ability.id in (37017, 37018)"
                 ) {
                     data
                 }

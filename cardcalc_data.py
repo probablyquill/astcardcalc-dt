@@ -24,9 +24,9 @@ class Player:
 
     @staticmethod
     def GetRole(job):
-        if job in {'DarkKnight', 'Gunbreaker', 'Warrior', 'Paladin', 'Dragoon', 'Samurai', 'Ninja', 'Monk', 'Reaper'}:
+        if job in {'DarkKnight', 'Gunbreaker', 'Warrior', 'Paladin', 'Dragoon', 'Samurai', 'Ninja', 'Monk', 'Reaper', 'Viper'}:
             return 'melee'
-        if job in {'Machinist', 'Dancer', 'Bard', 'WhiteMage', 'Scholar', 'Astrologian', 'Summoner', 'BlackMage', 'RedMage', 'Sage'}:
+        if job in {'Machinist', 'Dancer', 'Bard', 'WhiteMage', 'Scholar', 'Astrologian', 'Summoner', 'BlackMage', 'RedMage', 'Sage', 'Pictomancer'}:
             return 'ranged'
         if job in {'LimitBreak', 'Limit Break'}:
             return 'LimitBreak'
@@ -156,22 +156,14 @@ class CardPlay:
             return 0
         elif buffId != 0:
             return {
-                1001882: 4401,
-                1001883: 4404,
-                1001884: 4402,
-                1001885: 4403,
-                1001886: 4405,
-                1001887: 4406,
+                1003887: 37023,
+                1003889: 37026,
                 0: 'None',
             }[buffId]
         elif castId != 0:
             return {
-                4401: 1001882,
-                4404: 1001883,
-                4402: 1001884,
-                4403: 1001885,
-                4405: 1001886,
-                4406: 1001887,
+                37026: 1003889,
+                37023: 1003887,
                 0: 'None',
             }[castId]
         else:
@@ -181,46 +173,30 @@ class CardPlay:
     def GetName(buffId, castId=0):
         if buffId == 0 or castId != 0:
             return {
-                4401: 'The Balance',
-                4402: 'The Arrow',
-                4403: 'The Spear',
-                4404: 'The Bole',
-                4405: 'The Ewer',
-                4406: 'The Spire',
+                37023: 'The Balance',
+                37026: 'The Spear',
                 0: 'None',
             }[castId]
         else:
             return {
-                1001882: 'The Balance',
-                1001884: 'The Arrow',
-                1001885: 'The Spear',
-                1001883: 'The Bole',
-                1001886: 'The Ewer',
-                1001887: 'The Spire',
+                1003887: 'The Balance',
+                1003889: 'The Spear',
                 0: 'None',
             }[buffId]
 
     @staticmethod
     def GetRole(id):
         return {
-            1001882: 'melee',
-            1001884: 'melee',
-            1001885: 'melee',
-            1001883: 'ranged',
-            1001886: 'ranged',
-            1001887: 'ranged',
+            1003887: 'melee',
+            1003889: 'ranged',
             0: 'none',
         }[id]
 
     @staticmethod
     def GetBonus(id):
         return {
-            1001882: 1.06,
-            1001884: 1.06,
-            1001885: 1.06,
-            1001883: 1.06,
-            1001886: 1.06,
-            1001887: 1.06,
+            1003887: 1.06,
+            1003889: 1.06,
             0: 0,
         }[id]
 
@@ -283,7 +259,8 @@ class DrawWindow:
         return {
             -1: 'Fight End',
             0: 'Fight Start',
-            3590: 'Draw',
+            37018: 'Umbral Draw',
+            37017: 'Astral Draw',
             16552: 'Divination',
             3593: 'Redraw',  # TODO: Need to check if this is still the correct ID for Redraw
         }[id]
@@ -291,34 +268,21 @@ class DrawWindow:
     @staticmethod
     def GetCard(buffId):
         return {
-            1000913: 'The Balance',
-            1000914: 'The Bole',
-            1000915: 'The Arrow',
-            1000916: 'The Spear',
-            1000917: 'The Ewer',
-            1000918: 'The Spire'
+            1003887: 'The Balance',
+            1003889: 'The Spear'
         }[buffId]
 
     @staticmethod
     def ConvertID(buffId):
         return {
-            1000913: 4401,
-            1000914: 4404,
-            1000915: 4402,
-            1000916: 4403,
-            1000917: 4405,
-            1000918: 4406,
+            1003887: 37023,
+            1003889: 37026
         }[buffId]
 
     @staticmethod
     def GetBuff(buffId):
         return {
-            1000913: 'Balance Drawn',
-            1000914: 'Bole Drawn',
-            1000915: 'Arrow Drawn',
-            1000916: 'Spear Drawn',
-            1000917: 'Ewer Drawn',
-            1000918: 'Spire Drawn'
+            1001878: 'Balance Drawn'
         }[buffId]
 
 
