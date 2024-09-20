@@ -13,9 +13,10 @@ old_reqs.txt
 *~
 .*~
 
-# local ideas/dev file
+# local ideas/dev file and databases
 .idea
 .vscode
+*.db
 
 # Python pycache:
 .python-version
