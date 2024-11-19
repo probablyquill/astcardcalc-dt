@@ -75,27 +75,24 @@
 <h2>Current limitations</h2>
 <p>Some notes on the current analysis with regards to the optimal target for each 'Card Play' window:</p>
 <ul>
-    <li>Cards overwriting other cards isn't looked for explicitly but instead just results in shortened card play windows</li>
-    <li>The optimal target is based on the role (melee or ranged) of the card you played and there is no consideration at whether you should have tried to Redraw for a card of the opposite type</li>
     <li>If multiple cards are active at the same time players that have active cards already are ignored during the later card plays without checking if an alternative play order would have been more optimal</li>
 </ul>
 
 <p>While searching for the maximum damage output possible to cover with a card play during each potential 'Card Draw' window the following considerations are not taken into account:</p>
 <ul>
-    <li>Within each draw window there is no consideration for what card you have drawn, what seals you have or need, whether it would be reasonable to redraw for a different role or seal</li>
     <li>No consideration is given to your GCD, weave slots, or potential healing when calculating the initial time for playing cards so it is possible that it would be unreasonable to play a card a specified time</li>
     <li>The search is performed in 1s increments so it is possible that two damage instances which are nearly 15s apart will never end up considered together despite there being a possible card which would cover these. Thus it's possible that the reported play time for maximum damage is incorrect and could be higher if the playtime was shifted by less than a second in either direction</li>
 </ul>
 
 <h2>Who made this?</h2>
 
-<p>This projected was adapted from the tethercalc project made by Platinum Xephera on the Ultros server who graciously let me use their code as a starting point. It's currently managed by Marielle Kaidafaux on Adamantoise. I made it because I wanted a tool to examine optimal targets for cards while playing Astrologian. I hope the {{ report_count }} analyzed reports have been useful.</p>
-<p><s>If you notice any issues, feel free to DM me through Discord (Melody ♫#3761), or open issues and pull requests on the <a href="https://github.com/meldontaragon/astcardcalc">GitHub repo</a> for this site.</s></p>
-<p>&lt;If there are any issues with this version of the website please contact the maintainer (me, Quill) through Discord at probablyquill. Please do not bother Melody over issues with a forked version of the project.&gt;</p>
-<p>Original Repo: <a href="https://github.com/meldontaragon/astcardcalc" target="_blank">GitHub</a></p>
-<p>This fork: <a href="https://github.com/probablyquill/astcardcalc-dt" target="_blank">GitHub</a></p>
+<p>This projected was adapted from the tethercalc project made by Platinum Xephera on the Ultros server who graciously let Marielle use their code as a starting point. It was formerly managed by Marielle Kaidafaux on Adamantoise, created as a tool to examine optimal targets for cards while playing Astrologian. I hope the {{ report_count }} analyzed reports have been useful.</p>
+<p>Currently, this code and website is maintained by @probablyquill.</p>
+<p>If you notice any issues, feel free to DM me through Discord @probablyquill, or open issues and pull requests on the <a href="https://github.com/probablyquill/astcardcalc-dt">GitHub repo</a> for this site.</p>
+<p>This fork (updated to support Dawntrail): <a href="https://github.com/probablyquill/astcardcalc-dt" target="_blank">GitHub</a></p>
+<p>Original Repo (supports Endwalker): <a href="https://github.com/meldontaragon/astcardcalc" target="_blank">GitHub</a></p>
+
 <p>Also, additional thanks to the tooltips which are provided through the <a href="https://github.com/xivapi/vue-xivtooltips">Vue-XIVTooltips</a> library.</p>
-<p><b>While waiting for the official site to update, this version of the site was made and hosted by Quill. Contact me on discord (probablyquill) if there are any issues with the site hosting or damage calculations.</b></p>
 <h2>Changes</h2>
 
 <p>2024-09-20: Updates for Dawntrail compatability, including the new jobs and the changes to the card system. Due to these changes the tool is no longer able to parse logs from Endwalker or other previous expansions due to the reworking of the card system. This was fixed in git commit <a href="https://github.com/probablyquill/astcardcalc-dt/commit/105eda0605d7a8f5413c5fbc30a8ba8daf6a1c7c" target="_blank">105eda0</a></p>
