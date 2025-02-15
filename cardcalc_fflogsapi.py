@@ -93,22 +93,36 @@ query reportData($code: String!) {
 
 def decompose_url(url, token) -> tuple[str, int]:
     parts = urlparse(url)
+    print("\n\n")
+    print(parts.fragment)
 
+    # This is a quick and dirty patch to adjust for fflogs changing their query separator.
     try:
         report_id = [segment for segment in parts.path.split(
             '/') if segment][-1]
     except IndexError:
         raise CardCalcException("Invalid URL: {}".format(url))
-
     try:
-        fight_id = parse_qs(parts.fragment)['fight'][0]
+        temp_id = parts.query.split('&')
+        for item in temp_id:
+            if (item[0:6] == 'fight='):
+                temp_id=item
+                break
+
+        temp_id = temp_id.replace('fight=', '')
+        fight_id = temp_id
+        #fight_id = parse_qs(parts.fragment)['reports'][0]
     except KeyError:
         raise CardCalcException("Fight ID is required. Select a fight first")
-
+    except AttributeError:
+        raise CardCalcException("Fight ID is required. Select a fight first.")
+    
     if fight_id == 'last':
         fight_id = get_last_fight(report_id, token)
-    fight_id = int(fight_id)
-
+    try:
+        fight_id = int(fight_id)
+    except ValueError:
+        raise CardCalcException("Unable to read the fight ID.")
     return report_id, fight_id
 
 

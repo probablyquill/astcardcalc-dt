@@ -18,6 +18,7 @@ old_reqs.txt
 .vscode
 *.db
 test_run.sh
+venv/*
 
 # Python pycache:
 .python-version
