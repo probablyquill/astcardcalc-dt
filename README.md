@@ -30,8 +30,6 @@ The gunicorn execution command in run.sh is structured as follows:
 gunicorn -b [IP ADDRESS]:[PORT] -w [NUMBER OF WORKERS] main:app
 ```
 
-For the state that this project is currently in it is recommended to set the number of workers to one, as SQLite Database locking occasionally causes the master process to crash when multiple worker processes attempt simulatnious writes. This will be fixed eventually.
-
 ## Credits
 This is a fork of [meldontaragon's](https://github.com/meldontaragon) [astcardcalc](https://github.com/meldontaragon/astcardcalc) project.
 
