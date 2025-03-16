@@ -4,7 +4,7 @@ import os
 import json
 from collections import OrderedDict
 from urllib.parse import urlparse, parse_qs
-import sqlite3
+import psycopg2
 
 from flask import Flask, render_template, request, \
     redirect, send_from_directory, url_for
@@ -13,32 +13,38 @@ from cardcalc_fflogsapi import decompose_url, get_bearer_token
 from cardcalc_data import CardCalcException
 from cardcalc_cards import cardcalc
 
+PG_USER = os.environ['PG_USER']
+PG_PW = os.environ['PG_PASSWORD']
+
+PG_SERVER = "127.0.0.1"
+PG_DB = "cardcalc"
+PG_PORT = "5432"
+
 app = Flask(__name__)
 LAST_CALC_DATE = pytz.UTC.localize(datetime.utcfromtimestamp(1663886556))
 token = get_bearer_token()
 
-sqlitedb = "cardcalc.db"
-client = sqlite3.connect(sqlitedb)
+client = psycopg2.connect(database=PG_DB, host=PG_SERVER, user=PG_USER, password=PG_PW, port=PG_PORT)
 cur = client.cursor()
 
-cur.execute("CREATE TABLE IF NOT EXISTS Reports(report_id int, fight_id int, results text, actors text, enc_name text, enc_time int, enc_kill int, computed int)")
-cur.execute("CREATE TABLE IF NOT EXISTS Counts(total_reports int)")
+cur.execute("CREATE TABLE IF NOT EXISTS reports(report_id TEXT, fight_id INT, results TEXT, actors TEXT, enc_name TEXT, enc_time TIME, enc_kill BOOLEAN, computed TEXT);")
+cur.execute("CREATE TABLE IF NOT EXISTS counts(total_reports INT);")
 
 #Check on the report total counting / establish the counter if doesn't exist:
-count = cur.execute("SELECT * FROM COUNTS").fetchone()
+count = cur.execute("SELECT * FROM counts;")
+count = cur.fetchone()
 if count == None:
-    cur.execute("INSERT INTO COUNTS(total_reports) VALUES(0)")
+    cur.execute("INSERT INTO counts(total_reports) values(0);")
 
 client.commit()
 client.close()
 
 def get_count():
-    client = sqlite3.connect(sqlitedb)
+    client = psycopg2.connect(database=PG_DB, host=PG_SERVER, user=PG_USER, password=PG_PW, port=PG_PORT)
     cur = client.cursor()
-    count_query = cur.execute(
-        "SELECT * FROM `Counts`;")
+    cur.execute("SELECT * FROM counts;")
 
-    count_query = count_query.fetchone()[0]
+    count_query = cur.fetchone()[0]
     client.close()
 
     return count_query
@@ -49,14 +55,14 @@ def increment_count():
     report_count = count + 1
 
     sql = """
-UPDATE `Counts`
-SET total_reports = {}
-WHERE total_reports == {};
-""".format(report_count, count)
+UPDATE counts
+SET total_reports = %s
+WHERE total_reports = %s;
+"""
 
-    client = sqlite3.connect(sqlitedb)
+    client = psycopg2.connect(database=PG_DB, host=PG_SERVER, user=PG_USER, password=PG_PW, port=PG_PORT)
     cur = client.cursor()
-    cur.execute(sql)
+    cur.execute(sql, (report_count, count))
 
     client.commit()
     client.close()
@@ -67,7 +73,7 @@ def prune_reports():
     pass
 
 def prune_reports_old():
-    client = sqlite3.connect(sqlitedb)
+    client = psycopg2.connect(database=PG_DB, host=PG_SERVER, user=PG_USER, password=PG_PW, port=PG_PORT)
     cur = client.cursor()
 
     Reports = cur.execute("SELECT COUNT(*) FROM Reports;")
@@ -75,11 +81,11 @@ def prune_reports_old():
     if Reports > 10000:
         sql_get = """SELECT computed FROM `Reports`
     ORDER BY computed ASC
-    LIMIT 1 OFFSET 500"""
+    LIMIT 1 OFFSET 500;"""
         time_query = client.query(sql_get).result()
         computed_cutoff = next(time_query).get('computed')
         sql_delete = """DELETE FROM `astcardcalc-vm.Reports.Reports`
-WHERE computed < {}""".format(computed_cutoff)
+WHERE computed < {};""".format(computed_cutoff)
         client.query(sql_delete).result()
     
     client.commit()
@@ -116,7 +122,7 @@ def favicon():
 
 @app.route('/<string:report_id>/<int:fight_id>')
 def calc(report_id, fight_id):
-    client = sqlite3.connect(sqlitedb)
+    client = psycopg2.connect(database=PG_DB, host=PG_SERVER, user=PG_USER, password=PG_PW, port=PG_PORT)
     cur = client.cursor()
 
     """The actual calculated results view"""
@@ -127,15 +133,11 @@ def calc(report_id, fight_id):
     sql_report = None
     report = None
 
-    sql = """
-SELECT * FROM `Reports`
-WHERE report_id='{}' AND fight_id={}
-ORDER BY computed DESC;
-""".format(report_id, fight_id)
-    query_res = cur.execute(sql).fetchone()
+    sql = """SELECT * FROM reports WHERE report_id=%s AND fight_id=%s ORDER BY computed DESC;"""
+    query_res = cur.execute(sql, (str(report_id), fight_id))
 
     if (query_res != None):
-        print(query_res)
+        query_res.fetchone()
 
         report = {
             'report_id': query_res[0],
@@ -178,9 +180,10 @@ ORDER BY computed DESC;
         }
 
         # print(sql_report)
-        sql = """INSERT OR REPLACE INTO
-            Reports(report_id, fight_id, results, actors, enc_name, enc_time, enc_kill, computed) 
-            VALUES(?, ?, ?, ?, ?, ?, ?, ?)"""
+        sql = """INSERT INTO
+            reports(report_id, fight_id, results, actors, enc_name, enc_time, enc_kill, computed) 
+            VALUES(%s, %s, %s, %s, %s, %s, %s, %s);
+            """
         row_result = cur.execute(sql, (sql_report['report_id'], sql_report['fight_id'], sql_report['results'], 
                                 sql_report['actors'], sql_report['enc_name'], sql_report['enc_time'], sql_report['enc_kill'], sql_report['computed']))
         # print(row_result)
@@ -225,8 +228,11 @@ ORDER BY computed DESC;
                 'computed': datetime.now(),
             }
             sql = """INSERT OR REPLACE INTO
-            Reports(report_id, fight_id, results, actors, enc_name, enc_time, enc_kill, computed) 
-            VALUES(?, ?, ?, ?, ?, ?, ?, ?)"""
+            reports(report_id, fight_id, results, actors, enc_name, enc_time, enc_kill, computed) 
+            VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"""
+            
+            sql.replace("'", "\'")
+            sql.replace('\"', "\"")
             row_result = cur.execute(sql, (sql_report['report_id'], sql_report['fight_id'], sql_report['results'], 
                                            sql_report['actors'], sql_report['enc_name'], sql_report['enc_kill'], sql_report['computed']))
 

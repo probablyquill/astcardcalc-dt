@@ -15,11 +15,12 @@ If you want to run the program on Windows, you can use waitress with minimal mod
 
 To use the program, you will need both an FFLogs auth ID and a secret key. Instructions for obtaining those can be found [here](https://www.fflogs.com/api/docs).
 
-The program expects the ID and secret to be stored in environment variables FFLOGS_CLIENT_ID and FFLOGS_CLIENT_SECRET. 
+The program expects the ID and secret to be stored in environment variables FFLOGS_CLIENT_ID and FFLOGS_CLIENT_SECRET.
+It also expects a postgres username and password to be specified in PG_USER and PG_PASSWORD.
 
-Should you prefer to forgo using environmental variables, the values can be hardcoded in [cardcalc_fflogsapi.py](cardcalc_fflogsapi.py).
+Should you prefer to forgo using environmental variables, the values can be hardcoded in [cardcalc_fflogsapi.py](cardcalc_fflogsapi.py) for the fflogs keys and [main.py](main.py) for the postgres settings.
 
-After the ID and secret are configured, the program can be executed by executing the [run.sh](run.sh) file. You will need to have any firewalls or port mapping configured appropriately for the program to be reachable externally.
+After the id, secret, and postgres credentials are configured, the program can be executed by executing the [run.sh](run.sh) file. You will need to have any firewalls or port mapping configured appropriately for the program to be reachable externally.
 
 
 ## Usage
@@ -28,8 +29,6 @@ The gunicorn execution command in run.sh is structured as follows:
 ```sh
 gunicorn -b [IP ADDRESS]:[PORT] -w [NUMBER OF WORKERS] main:app
 ```
-
-For the state that this project is currently in it is recommended to set the number of workers to one, as SQLite Database locking occasionally causes the master process to crash when multiple worker processes attempt simulatnious writes. This will be fixed eventually.
 
 ## Credits
 This is a fork of [meldontaragon's](https://github.com/meldontaragon) [astcardcalc](https://github.com/meldontaragon/astcardcalc) project.
