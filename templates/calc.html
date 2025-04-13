@@ -75,9 +75,6 @@
                                             <th scope="col">
                                                 <span data-toggle="tooltip" data-placement="bottom" title="Total damage done in the card window">Raw Damage</span>
                                             </th>
-                                            <th scope="col">
-                                                <span data-toggle="tooltip" data-placement="bottom" title="Did the player have a card already when this window started?">Has Card?</span>
-                                            </th>
                                         </tr>
                                     </div>
                                 </thead>
@@ -89,7 +86,6 @@
                                             <td>{{ report['actors'][damage['id']]['job'] }}</td>
                                             <td>{{ damage['adjustedDamage'] }}</td>
                                             <td>{{ damage['realDamage'] }}</td>
-                                            <td>{% if damage['hasCard'] %}✔{% endif %}</td>
                                     {% endif %}
                                     {% endfor %}
                                 </tbody>

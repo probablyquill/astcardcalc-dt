@@ -337,8 +337,7 @@ def _handle_card_play(card, cards, damage_report, actors, fight_info):
             by='adjustedDamage', ascending=False, inplace=True)
 
         # get the highest damage target that isn't LimitBreak
-        optimal_target = card_damage_table[(card_damage_table['role'] != 'LimitBreak') & (
-            card_damage_table['hasCard'] == False)]['adjustedDamage'].idxmax()
+        optimal_target = card_damage_table[(card_damage_table['role'] != 'LimitBreak')]['adjustedDamage'].idxmax()
 
         if optimal_target is None:
             optimal_target = 'Nobody?'
