@@ -169,10 +169,11 @@ def calc(report_id, fight_id):
     report = None
 
     sql = """SELECT * FROM reports WHERE report_id=%s AND fight_id=%s ORDER BY computed DESC;"""
+    sql = "SELECT * FROM reports WHERE report_id=%s AND fight_id=%s"
     query_res = cur.execute(sql, (str(report_id), fight_id))
+    query_res = cur.fetchone()
 
     if (query_res != None):
-        query_res.fetchone()
 
         report = {
             'report_id': query_res[0],
@@ -185,7 +186,7 @@ def calc(report_id, fight_id):
             'computed': query_res[7],
         }
 
-    if sql_report is None:
+    if report is None:
         # Compute
         try:
             results, actors, encounter_info = cardcalc(
@@ -234,45 +235,16 @@ def calc(report_id, fight_id):
         # print(LAST_CALC_DATE)
         # print(type(LAST_CALC_DATE))
 
-        # Recompute if no computed timestamp
-        if sql_report['computed'] < LAST_CALC_DATE:
+        # TODO implement recomput if X time since log was last calculated.
+        """if sql_report['computed'] < LAST_CALC_DATE:
             try:
                 results, actors, encounter_info = cardcalc(
                     report_id, fight_id, token)
             except CardCalcException as exception:
-                return render_template('error.html', exception=exception)
+                return render_template('error.html', exception=exception)"""
 
-            sql_report = {
-                'report_id': report_id,
-                'fight_id': fight_id,
-                'results': json.dumps(results),
-                'actors': json.dumps(actors),
-                'enc_name': encounter_info['enc_name'],
-                'enc_time': encounter_info['enc_time'],
-                'enc_kill': encounter_info['enc_kill'],
-                'computed': datetime.now().isoformat(),
-            }
-            report = {
-                'report_id': report_id,
-                'fight_id': fight_id,
-                'results': results,
-                'actors': actors,
-                'enc_name': encounter_info['enc_name'],
-                'enc_time': encounter_info['enc_time'],
-                'enc_kill': encounter_info['enc_kill'],
-                'computed': datetime.now(),
-            }
-            sql = """INSERT OR REPLACE INTO
-            reports(report_id, fight_id, results, actors, enc_name, enc_time, enc_kill, computed) 
-            VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"""
-            
-            sql.replace("'", "\'")
-            sql.replace('\"', "\"")
-            row_result = cur.execute(sql, (sql_report['report_id'], sql_report['fight_id'], sql_report['results'], 
-                                           sql_report['actors'], sql_report['enc_name'], sql_report['enc_kill'], sql_report['computed']))
-
-            client.commit()
-            client.close()
+        client.commit()
+        client.close()
 
     report['results'] = {int(k): v for k, v in report['results'].items()}
     report['actors'] = {int(k): v for k, v in report['actors'].items()}
@@ -284,6 +256,8 @@ def calc(report_id, fight_id):
     #TODO Clean up DB access and reduce the number of times the connection is opened and closed.
 
     #Track best targets to compile in database
+
+    # Temporarily disabled while working on other issues.
     track_targets(report)
 
     return render_template('calc.html', report=report)
