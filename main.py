@@ -118,11 +118,12 @@ def track_targets(report):
                 if (db_max < damage): db_max = damage
 
                 # Cannot use REPLACE because there is no Unique or Primary key, it may best to restructure the DB but for now this gets to the exact functionality I need.
-                sql = "DELETE FROM targets WHERE job=%s AND cardid=%s"
-                cur.execute(sql, (job, card))
+                #sql = "DELETE FROM targets WHERE job=%s AND cardid=%s"
+                #cur.execute(sql, (job, card))
 
-                sql = "INSERT INTO targets(job, cardId, average, max, total) VALUES (%s, %s, %s, %s, %s)"
-                cur.execute(sql, (job, card, new_avg, db_max, total))
+                #sql = "INSERT INTO targets(job, cardId, average, max, total) VALUES (%s, %s, %s, %s, %s)"
+                sql = "UPDATE targets SET average=%s, max=%s, total=%s WHERE job=%s AND cardid=%s;"
+                cur.execute(sql, (new_avg, db_max, total, job, card))
 
     client.commit()
     client.close()
