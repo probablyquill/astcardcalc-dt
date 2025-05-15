@@ -96,35 +96,77 @@ def track_targets(report):
     client = psycopg2.connect(database=PG_DB, host=PG_SERVER, user=PG_USER, password=PG_PW, port=PG_PORT)
     cur = client.cursor()
 
+    sql = "SELECT job, cardId, average, max, total from targets;"
+    cur.execute(sql)
+
+    data = cur.fetchall()
+
+    melee_dict = {}
+    ranged_dict = {}
+
+    insert_list = []
+
+    # True / False at the end tracks whether it has been updated.
+    for item in data:
+        if item[1] == 37023:
+            melee_dict[item[0]] = (item[2], item[3], item[4], False)
+        else:
+            ranged_dict[item[0]] = (item[2], item[3], item[4], False)
+
     # Loop through the all jobs present on each play window and save their adjusted damage to the database.
     for window in report['results']:
         card = window['cardId']
+        if card == 37023:
+            job_dict = melee_dict
+        else:
+            job_dict = ranged_dict
+
         for row in window['cardDamageTable']:
             job = row['job'].lower()
+            
             damage = row['adjustedDamage']
 
-            sql = "SELECT average, max, total FROM targets WHERE job=%s AND cardId=%s;"
-            cur.execute(sql, (job, card))
-            job_result = cur.fetchone()
 
-            if (job_result == None):
-                sql = "INSERT INTO targets(job, cardId, average, max, total) VALUES (%s, %s, %s, %s, %s);"
-                cur.execute(sql, (job, card, damage, damage, 1))
+            if (job not in job_dict):
+                job_dict[job] = (damage, damage, 1, True)
+                insert_list.append(job)
+
             else:
-                db_avg, db_max, total = job_result
+                db_avg, db_max, total, updated = job_dict[job]
+                
                 # My understanding is that Python Longs don't overflow so theoretically this is fine forever(?)
                 new_avg = ((db_avg * total) + damage) / (total + 1)
-                total+=1 
+
+                total+=1
                 if (db_max < damage): db_max = damage
 
-                # Cannot use REPLACE because there is no Unique or Primary key, it may best to restructure the DB but for now this gets to the exact functionality I need.
-                #sql = "DELETE FROM targets WHERE job=%s AND cardid=%s"
-                #cur.execute(sql, (job, card))
+                job_dict[job] = (new_avg, db_max, total, True)
 
-                #sql = "INSERT INTO targets(job, cardId, average, max, total) VALUES (%s, %s, %s, %s, %s)"
+    # Cannot use REPLACE because there is no Unique or Primary key, it may best to restructure the DB but for now this gets to the exact functionality I need.
+    # sql = "DELETE FROM targets WHERE job=%s AND cardid=%s"
+    # cur.execute(sql, (job, card))
+
+    #sql = "INSERT INTO targets(job, cardId, average, max, total) VALUES (%s, %s, %s, %s, %s)"
+    
+    def sql_update(update_dict, cardId):
+        for job in update_dict:
+            average, max, total, updated = update_dict[job]
+            if not updated: continue
+
+            print(f"{job}, {cardId}")
+
+            if job in insert_list:
+                sql = "INSERT INTO targets(job, cardId, average, max, total) VALUES(%s, %s, %s, %s, %s)"
+                cur.execute(sql, (job, cardId, average, max, total))
+            else:
                 sql = "UPDATE targets SET average=%s, max=%s, total=%s WHERE job=%s AND cardid=%s;"
-                cur.execute(sql, (new_avg, db_max, total, job, card))
+                cur.execute(sql, (average, max, total, job, cardId))
 
+    #TODO later remove hardcoded cardIds if possible.
+    sql_update(melee_dict, 37023)
+    sql_update(ranged_dict, 37026)
+    
+    print(melee_dict)
     client.commit()
     client.close()
 
