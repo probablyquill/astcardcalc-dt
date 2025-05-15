@@ -115,7 +115,14 @@ def track_targets(report):
 
     # Loop through the all jobs present on each play window and save their adjusted damage to the database.
     for window in report['results']:
-        card = window['cardId']
+        print(window)
+
+        if ('cardId' in window):
+            # Error handling for cases where a card was drawn but not played.
+            card = window['cardId']
+        else:
+            continue
+        
         if card == 37023:
             job_dict = melee_dict
         else:
