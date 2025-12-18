@@ -102,6 +102,8 @@ def track_targets(report):
 
         # Loop through the all jobs present on each play window and save their adjusted damage to the database.
         for window in report['results']:
+            print(window)
+            if 'cardId' not in window: continue
             card = window['cardId']
             for row in window['cardDamageTable']:
                 job = row['job'].lower()
