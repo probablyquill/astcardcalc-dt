@@ -5,6 +5,7 @@ import json
 from collections import OrderedDict
 from urllib.parse import urlparse, parse_qs
 import psycopg2
+import psycopg2.extras
 
 from flask import Flask, render_template, request, \
     redirect, send_from_directory, url_for
@@ -29,6 +30,7 @@ cur = client.cursor()
 
 cur.execute("CREATE TABLE IF NOT EXISTS reports(report_id TEXT, fight_id INT, results TEXT, actors TEXT, enc_name TEXT, enc_time TIME, enc_kill BOOLEAN, computed TEXT);")
 cur.execute("CREATE TABLE IF NOT EXISTS counts(total_reports INT);")
+cur.execute("DROP TABLE targets")
 cur.execute("CREATE TABLE IF NOT EXISTS targets(job TEXT, cardId INT, encounterId TEXT, difficulty INT, average BIGINT, max BIGINT, total INT);")
 
 #Check on the report total counting / establish the counter if doesn't exist:
@@ -100,22 +102,36 @@ def track_targets(report):
     
     if report['enc_kill'] == True and difficulty != None:
 
+        sql = "SELECT cardId, job, average, max, total FROM targets WHERE encounterId=%s AND difficulty=%s"
+        cur.execute(sql, (encounter_id, difficulty))
+        job_data = cur.fetchall()
+
+        cleaned_data = {}
+
+        for j in job_data:
+            card, job_name, average, max, total = j
+            cleaned_data[(job_name, card)] = [average, max, total]
+
         # Loop through the all jobs present on each play window and save their adjusted damage to the database.
         for window in report['results']:
-            print(window)
             if 'cardId' not in window: continue
             card = window['cardId']
             for row in window['cardDamageTable']:
                 job = row['job'].lower()
                 damage = row['adjustedDamage']
 
+                if ((job, card) in cleaned_data):
+                    job_result = cleaned_data[(job, card)]
+                else:
+                    job_result = None
                 sql = "SELECT average, max, total FROM targets WHERE job=%s AND cardId=%s AND encounterId=%s AND difficulty=%s;"
-                cur.execute(sql, (job, card, encounter_id, difficulty))
-                job_result = cur.fetchone()
+                # cur.execute(sql, (job, card, encounter_id, difficulty))
+                # job_result = cur.fetchone()
 
                 if (job_result == None):
-                    sql = "INSERT INTO targets(job, cardId, encounterId, difficulty, average, max, total) VALUES (%s, %s, %s, %s, %s, %s, %s);"
-                    cur.execute(sql, (job, card, encounter_id, difficulty, damage, damage, 1))
+                    # sql = "INSERT INTO targets(job, cardId, encounterId, difficulty, average, max, total) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+                    # cur.execute(sql, (job, card, encounter_id, difficulty, damage, damage, 1))
+                    cleaned_data[(job, card)] = [damage, damage, 1]
                 else:
                     db_avg, db_max, total = job_result
                     # My understanding is that Python Longs don't overflow so theoretically this is fine forever even if naive(?)
@@ -123,12 +139,29 @@ def track_targets(report):
                     total+=1 
                     if (db_max < damage): db_max = damage
 
-                    # Cannot use REPLACE because there is no Unique or Primary key, it may best to restructure the DB but for now this gets to the exact functionality I need.
-                    sql = "DELETE FROM targets WHERE job=%s AND cardId=%s AND encounterId=%s AND difficulty = %s"
-                    cur.execute(sql, (job, card, encounter_id, difficulty))
+                    cleaned_data[(job, card)] = [new_avg, db_max, total]
 
-                    sql = "INSERT INTO targets(job, cardId, encounterId, difficulty, average, max, total) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-                    cur.execute(sql, (job, card, encounter_id, difficulty, new_avg, db_max, total))
+                    # Cannot use REPLACE because there is no Unique or Primary key, it may best to restructure the DB but for now this gets to the exact functionality I need.
+                    # sql = "DELETE FROM targets WHERE job=%s AND cardId=%s AND encounterId=%s AND difficulty = %s"
+                    # cur.execute(sql, (job, card, encounter_id, difficulty))
+
+                    # sql = "INSERT INTO targets(job, cardId, encounterId, difficulty, average, max, total) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+                    # cur.execute(sql, (job, card, encounter_id, difficulty, new_avg, db_max, total))
+        
+        # Changed to batch all insert / delete records together to make it not take 5 seconds because of networking.
+        
+        sql = "DELETE FROM targets WHERE encounterId=%s AND difficulty=%s"
+        cur.execute(sql, (encounter_id, difficulty))
+
+        sql_data = []
+        for job, card in cleaned_data:
+            avg, max, total = cleaned_data[(job, card)]
+            sql_data.append(
+                (job, card, encounter_id, difficulty, avg, max, total)
+            )
+
+        sql = "INSERT INTO targets(job, cardId, encounterId, difficulty, average, max, total) VALUES %s"
+        psycopg2.extras.execute_values(cur, sql, sql_data)
 
     client.commit()
     client.close()
@@ -290,7 +323,6 @@ def calc(report_id, fight_id):
     report['results'] = list(OrderedDict(
         sorted(report['results'].items())).values())
     actors = {int(k): v for k, v in report['actors'].items()}
-
     #TODO Clean up DB access and reduce the number of times the connection is opened and closed.
 
     #Track best targets to compile in database
