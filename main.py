@@ -29,7 +29,7 @@ cur = client.cursor()
 
 cur.execute("CREATE TABLE IF NOT EXISTS reports(report_id TEXT, fight_id INT, results TEXT, actors TEXT, enc_name TEXT, enc_time TIME, enc_kill BOOLEAN, computed TEXT);")
 cur.execute("CREATE TABLE IF NOT EXISTS counts(total_reports INT);")
-cur.execute("CREATE TABLE IF NOT EXISTS targets(job TEXT, cardId INT, average BIGINT, max BIGINT, total INT);")
+cur.execute("CREATE TABLE IF NOT EXISTS targets(job TEXT, cardId INT, encounterId TEXT, difficulty INT, average BIGINT, max BIGINT, total INT);")
 
 #Check on the report total counting / establish the counter if doesn't exist:
 count = cur.execute("SELECT * FROM counts;")
@@ -49,7 +49,6 @@ def get_count():
     client.close()
 
     return count_query
-
 
 def increment_count():
     count = get_count()
@@ -96,33 +95,38 @@ def track_targets(report):
     client = psycopg2.connect(database=PG_DB, host=PG_SERVER, user=PG_USER, password=PG_PW, port=PG_PORT)
     cur = client.cursor()
 
-    # Loop through the all jobs present on each play window and save their adjusted damage to the database.
-    for window in report['results']:
-        card = window['cardId']
-        for row in window['cardDamageTable']:
-            job = row['job'].lower()
-            damage = row['adjustedDamage']
+    encounter_id = report['enc_name']
+    difficulty = report['difficulty']
+    
+    if report['end_kill'] == True and difficulty != None:
 
-            sql = "SELECT average, max, total FROM targets WHERE job=%s AND cardId=%s;"
-            cur.execute(sql, (job, card))
-            job_result = cur.fetchone()
+        # Loop through the all jobs present on each play window and save their adjusted damage to the database.
+        for window in report['results']:
+            card = window['cardId']
+            for row in window['cardDamageTable']:
+                job = row['job'].lower()
+                damage = row['adjustedDamage']
 
-            if (job_result == None):
-                sql = "INSERT INTO targets(job, cardId, average, max, total) VALUES (%s, %s, %s, %s, %s);"
-                cur.execute(sql, (job, card, damage, damage, 1))
-            else:
-                db_avg, db_max, total = job_result
-                # My understanding is that Python Longs don't overflow so theoretically this is fine forever(?)
-                new_avg = ((db_avg * total) + damage) / (total + 1)
-                total+=1 
-                if (db_max < damage): db_max = damage
+                sql = "SELECT average, max, total FROM targets WHERE job=%s AND cardId=%s AND encounterId=%s AND difficulty=%s;"
+                cur.execute(sql, (job, card, encounter_id, difficulty))
+                job_result = cur.fetchone()
 
-                # Cannot use REPLACE because there is no Unique or Primary key, it may best to restructure the DB but for now this gets to the exact functionality I need.
-                sql = "DELETE FROM targets WHERE job=%s AND cardid=%s"
-                cur.execute(sql, (job, card))
+                if (job_result == None):
+                    sql = "INSERT INTO targets(job, cardId, encounterId, difficulty, average, max, total) VALUES (%s, %s, %s, %s, %s, %s, %s);"
+                    cur.execute(sql, (job, card, encounter_id, difficulty, damage, damage, 1))
+                else:
+                    db_avg, db_max, total = job_result
+                    # My understanding is that Python Longs don't overflow so theoretically this is fine forever even if naive(?)
+                    new_avg = ((db_avg * total) + damage) / (total + 1)
+                    total+=1 
+                    if (db_max < damage): db_max = damage
 
-                sql = "INSERT INTO targets(job, cardId, average, max, total) VALUES (%s, %s, %s, %s, %s)"
-                cur.execute(sql, (job, card, new_avg, db_max, total))
+                    # Cannot use REPLACE because there is no Unique or Primary key, it may best to restructure the DB but for now this gets to the exact functionality I need.
+                    sql = "DELETE FROM targets WHERE job=%s AND cardId=%s AND encounterId=%s AND difficulty = %s"
+                    cur.execute(sql, (job, card, encounter_id, difficulty))
+
+                    sql = "INSERT INTO targets(job, cardId, encounterId, difficulty, average, max, total) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+                    cur.execute(sql, (job, card, encounter_id, difficulty, new_avg, db_max, total))
 
     client.commit()
     client.close()
@@ -202,6 +206,7 @@ def calc(report_id, fight_id):
             'enc_time': encounter_info['enc_time'],
             'enc_kill': encounter_info['enc_kill'],
             'computed': datetime.now().isoformat(),
+            'difficulty': encounter_info['difficulty'],
         }
         report = {
             'report_id': report_id,
@@ -212,6 +217,7 @@ def calc(report_id, fight_id):
             'enc_time': encounter_info['enc_time'],
             'enc_kill': encounter_info['enc_kill'],
             'computed': datetime.now(),
+            'difficulty': encounter_info['difficulty'],
         }
 
         # print(sql_report)
@@ -251,6 +257,7 @@ def calc(report_id, fight_id):
                 'enc_time': encounter_info['enc_time'],
                 'enc_kill': encounter_info['enc_kill'],
                 'computed': datetime.now().isoformat(),
+                'difficulty': encounter_info['difficulty'],
             }
             report = {
                 'report_id': report_id,
@@ -261,6 +268,7 @@ def calc(report_id, fight_id):
                 'enc_time': encounter_info['enc_time'],
                 'enc_kill': encounter_info['enc_kill'],
                 'computed': datetime.now(),
+                'difficulty': encounter_info['difficulty'],
             }
             sql = """INSERT OR REPLACE INTO
             reports(report_id, fight_id, results, actors, enc_name, enc_time, enc_kill, computed) 

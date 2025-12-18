@@ -631,5 +631,6 @@ def cardcalc(report, fight_id, token) -> FightInfo:
         'enc_name': fight_info.name,
         'enc_time': fight_info.ToString(),
         'enc_kill': fight_info.kill,
+        'difficulty': fight_info.difficulty
     }
     return cardcalc_data, actors.to_dict(), encounter_info

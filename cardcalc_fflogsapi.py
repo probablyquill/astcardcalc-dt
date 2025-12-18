@@ -140,17 +140,19 @@ query reportData($code: String!) {
                 endTime
                 name
                 kill
+                difficulty
             }
         }
     }
 }
 """
     data = call_fflogs_api(query, variables, token)
+    
     fights = data['data']['reportData']['report']['fights']
 
     for f in fights:
         if f['id'] == fight:
-            return FightInfo(report_id=report, fight_number=f['id'], start_time=f['startTime'], end_time=f['endTime'], name=f['name'], kill=f['kill'])
+            return FightInfo(report_id=report, fight_number=f['id'], start_time=f['startTime'], end_time=f['endTime'], name=f['name'], kill=f['kill'], difficulty=f['difficulty'])
 
     raise CardCalcException("Fight ID not found in report")
 

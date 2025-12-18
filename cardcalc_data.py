@@ -287,13 +287,14 @@ class DrawWindow:
 
 
 class FightInfo:
-    def __init__(self, report_id, fight_number, start_time, end_time, name, kill):
+    def __init__(self, report_id, fight_number, start_time, end_time, name, kill, difficulty):
         self.id = report_id
         self.index = fight_number
         self.start = start_time
         self.end = end_time
         self.kill = kill
         self.name = name
+        self.difficulty = difficulty
 
     def to_dict(self):
         return {
@@ -305,6 +306,7 @@ class FightInfo:
             'name': self.name,
             'duration': self.Duration(),
             'length': self.ToString(),
+            'difficulty': self.difficulty
         }
 
     def Duration(self, time=None):
