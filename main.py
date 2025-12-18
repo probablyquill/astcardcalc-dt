@@ -30,7 +30,6 @@ cur = client.cursor()
 
 cur.execute("CREATE TABLE IF NOT EXISTS reports(report_id TEXT, fight_id INT, results TEXT, actors TEXT, enc_name TEXT, enc_time TIME, enc_kill BOOLEAN, computed TEXT);")
 cur.execute("CREATE TABLE IF NOT EXISTS counts(total_reports INT);")
-cur.execute("DROP TABLE targets")
 cur.execute("CREATE TABLE IF NOT EXISTS targets(job TEXT, cardId INT, encounterId TEXT, difficulty INT, average BIGINT, max BIGINT, total INT);")
 
 #Check on the report total counting / establish the counter if doesn't exist:
@@ -99,7 +98,6 @@ def track_targets(report):
 
     encounter_id = report['enc_name']
     difficulty = report['difficulty']
-    
     if report['enc_kill'] == True and difficulty != None:
 
         sql = "SELECT cardId, job, average, max, total FROM targets WHERE encounterId=%s AND difficulty=%s"
