@@ -98,7 +98,7 @@ def track_targets(report):
     encounter_id = report['enc_name']
     difficulty = report['difficulty']
     
-    if report['end_kill'] == True and difficulty != None:
+    if report['enc_kill'] == True and difficulty != None:
 
         # Loop through the all jobs present on each play window and save their adjusted damage to the database.
         for window in report['results']:
