@@ -44,7 +44,7 @@
                                                 Job
                                             </th>
                                             <th scope="col">
-                                                <span data-toggle="tooltip" data-placement="bottom" title="The median of all logged pull data.">Average</span>
+                                                <span data-toggle="tooltip" data-placement="bottom" title="The mean of all logged pull data.">Average</span>
                                             </th>
                                             <th scope="col">
                                                 Max
@@ -113,6 +113,7 @@
 
     <div class="mb-2">
         <h2>Methodology:</h2>
+        <p><b>Windows in a fight are only counted towards the total tracked average if the boss is killed.</b></p>
         <p>
             Every time a card is played, the card calculator checks the damage done during the duration of the card by all players. 
             This is compiled into an average (mean) based on the total number of windows checked. The card calculator also finds the
@@ -123,10 +124,11 @@
         <code>new_average = ((old_average * total) + damage_from_damage_window) / (total + 1)</code>
         <h3 class="pt-3">Changes I'd Like To Make:</h3>
         <ul>
-            <li>Ignore outlier data, specifically if the damage is exceptionally low compared to the existing average.</li>
+            <li>Ignore outlier data, specifically if the damage is exceptionally low compared to the existing average. This would also help with any windows being ended early beacuse of killtime.</li>
             <li>Incorporate the 'true' optimal target which the calculator calculates.</li>
             <li>There's probably a better way to count / maintain the average. Since (my understanding it) Python longs don't 
                 overflow, this should be fine indefinitely, however I doubt it's the 'best' way.</li>
+            <li>It would be idea to differentiate between windows that have pots active, or which are openers.</li>
         </ul>
     </div>
 

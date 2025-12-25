@@ -354,13 +354,14 @@ def encounter_report(encounter):
     # The point of this segment is to correctly pull capitalization / punctuation from the DB's encounterid.
     encounter = cleaned_encounters[index]
     
-    sql = """SELECT job, cardid, difficulty, average, max, total FROM targets WHERE LOWER(encounterid) LIKE LOWER(%s) ORDER BY average DESC"""
+    sql = """SELECT job, cardid, difficulty, average, max, total FROM targets WHERE encounterid=%s ORDER BY average DESC"""
     cur.execute(sql, (encounter,))
     encounter_data = cur.fetchall()
 
     ranged_list = []    # 37023 = The Balance
     melee_list = []     # 37026 = The Spear
 
+    savage_present = False
     # Since everything is arriving pre-sorted by the database, we'll just split it by card types as is.
     for item in encounter_data:
         # We will need difficulty later for distinguishing between normal and savage. It does not matter for ex.
@@ -368,11 +369,26 @@ def encounter_report(encounter):
 
         # Smile
         job = job[0].upper() + job[1:]
+        if difficulty == 101: savage_present = True
+        if difficulty == 100 and savage_present == True: continue
 
         if card == 37023:
             melee_list.append((job, average, max, total))
         elif card == 37026:
             ranged_list.append((job, average, max, total))
+
+    # TODO this 'works' but is a temporary solution until I find one I like better.
+    if savage_present:
+        new_ranged = []
+        new_melee = []
+        for item in ranged_list:
+            job, card, difficulty, *discard = item
+            if difficulty == 101: new_ranged.add(item)
+        for item in melee_list:
+            job, card, difficulty, *discard = item
+            if difficulty == 101: new_melee.add(item)
+        ranged_list = new_ranged
+        melee_list = new_melee
 
     ranged_list = ranged_list[:8]
     melee_list = melee_list[:8]
