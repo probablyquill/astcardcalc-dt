@@ -120,8 +120,9 @@ def track_targets(report):
             startTime = int(startTime[:-3]) * 60 + int(startTime[-2:])
             
             is_opener = False
-            if startTime > 30: is_opener = True
+            if startTime < 31: is_opener = True
 
+            print(f"Adding Window Opening At: {startTime} | OPENER={is_opener}")
             for row in window['cardDamageTable']:
                 job = row['job']
                 damage = row['adjustedDamage']
@@ -152,9 +153,6 @@ def track_targets(report):
             sql_data.append(
                 (job, card, encounter_id, difficulty, avg, max, total, opener)
             )
-
-        for s in sql_data:
-            print(s)
 
         sql = "INSERT INTO targets(job, cardId, encounterId, difficulty, average, max, total, opener) VALUES %s;"
         psycopg2.extras.execute_values(cur, sql, sql_data)
@@ -395,6 +393,7 @@ def encounter_report(encounter):
     non_opener_melee = []
 
     for r in ranged_list:
+        print(r)
         if r[1]: opener_ranged.append(r)
         else: non_opener_ranged.append(r)
 
