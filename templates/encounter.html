@@ -178,11 +178,12 @@
     <div class="mb-2">
         <h2>Methodology:</h2>
         <p><b>Windows in a fight are only counted towards the total tracked average if the boss is killed.</b></p>
+        <p> If a card is played within thirty seconds of the fight starting, the window is considered a part of the opener.</p>
         <p>
             Every time a card is played, the card calculator checks the damage done during the duration of the card by all players. 
-            This is compiled into an average (mean) based on the total number of windows checked. The card calculator also finds the
-            ideal play time in the range that the card was available. I haven't included that 
-            data yet because there's a couple of issues, primarily that sometimes the 'ideal' window is not possible.
+            This is compiled into an average (mean) based on the total number of windows checked. Maximum and averages are currently 
+            both being calculated at the moment the card is played. In the future, I will include data from the 'ideal' card uses
+            that the card calculator finds. 
         </p>
         <p>Every time the average is updated, it's re-calculated using the following: </p>
         <code>new_average = ((old_average * total) + damage_from_damage_window) / (total + 1)</code>
