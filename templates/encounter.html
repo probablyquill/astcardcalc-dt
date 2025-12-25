@@ -36,6 +36,7 @@
             <div class="content">
                     <div class="col">
                         <div class="table-responsive-md">
+                            <h3>Opener:</h3>
                             <table class="table table-striped">
                                 <thead>
                                     <div>
@@ -55,13 +56,44 @@
                                     </div>
                                 </thead>
                                 <tbody>
-                                        {% for m in melee_list %}
+                                        {% for m in melee_list[0] %}
                                         <tr>
                                             <td>{{ m[0] }}</td>
-                                            <td>{{ m[1] }}</td>
-                                            <td>{{ m[2] }}</td>
                                             <td>{{ m[3] }}</td>
+                                            <td>{{ m[4] }}</td>
+                                            <td>{{ m[5] }}</td>
                                         {% endfor %}
+                                        
+                                </tbody>
+                            </table>
+                            <h3>2M Burst:</h3>
+                            <table class="table table-striped">
+                                <thead>
+                                    <div>
+                                        <tr>
+                                            <th scope="col">
+                                                Job
+                                            </th>
+                                            <th scope="col">
+                                                <span data-toggle="tooltip" data-placement="bottom" title="The mean of all logged pull data.">Average</span>
+                                            </th>
+                                            <th scope="col">
+                                                Max
+                                            <th scope="col">
+                                                <span data-toggle="tooltip" data-placement="bottom" title="Total number of windows used to obtain the average.">Total</span>
+                                            </th>
+                                        </tr>
+                                    </div>
+                                </thead>
+                                <tbody>
+                                        {% for m in melee_list[1] %}
+                                        <tr>
+                                            <td>{{ m[0] }}</td>
+                                            <td>{{ m[3] }}</td>
+                                            <td>{{ m[4] }}</td>
+                                            <td>{{ m[5] }}</td>
+                                        {% endfor %}
+                                        
                                 </tbody>
                             </table>
                         </div>
@@ -75,6 +107,7 @@
             <div class="content">
                 <div class="col">
                         <div class="table-responsive-md">
+                            <h3>Opener:</h3>
                             <table class="table table-striped">
                                 <thead>
                                     <div>
@@ -83,7 +116,7 @@
                                                 Job
                                             </th>
                                             <th scope="col">
-                                                <span data-toggle="tooltip" data-placement="bottom" title="The median of all logged pull data.">Average</span>
+                                                <span data-toggle="tooltip" data-placement="bottom" title="The mean of all logged pull data.">Average</span>
                                             </th>
                                             <th scope="col">
                                                 Max
@@ -94,13 +127,44 @@
                                     </div>
                                 </thead>
                                 <tbody>
-                                        {% for m in ranged_list %}
+                                        {% for m in ranged_list[0] %}
                                         <tr>
                                             <td>{{ m[0] }}</td>
-                                            <td>{{ m[1] }}</td>
-                                            <td>{{ m[2] }}</td>
                                             <td>{{ m[3] }}</td>
+                                            <td>{{ m[4] }}</td>
+                                            <td>{{ m[5] }}</td>
                                         {% endfor %}
+                                        
+                                </tbody>
+                            </table>
+                            <h3>2M Burst:</h3>
+                            <table class="table table-striped">
+                                <thead>
+                                    <div>
+                                        <tr>
+                                            <th scope="col">
+                                                Job
+                                            </th>
+                                            <th scope="col">
+                                                <span data-toggle="tooltip" data-placement="bottom" title="The mean of all logged pull data.">Average</span>
+                                            </th>
+                                            <th scope="col">
+                                                Max
+                                            <th scope="col">
+                                                <span data-toggle="tooltip" data-placement="bottom" title="Total number of windows used to obtain the average.">Total</span>
+                                            </th>
+                                        </tr>
+                                    </div>
+                                </thead>
+                                <tbody>
+                                        {% for m in ranged_list[1] %}
+                                        <tr>
+                                            <td>{{ m[0] }}</td>
+                                            <td>{{ m[3] }}</td>
+                                            <td>{{ m[4] }}</td>
+                                            <td>{{ m[5] }}</td>
+                                        {% endfor %}
+                                        
                                 </tbody>
                             </table>
                         </div>
