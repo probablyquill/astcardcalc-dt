@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+<span><ActionFetch name="The Balance" :id="37023" /></span> - Melee
+
+{% block content %}
+    <h1>Job Performance Tracking</h1>
+    <div class="card mb-4 p-2">
+        <img id="doomtrain" src="https://assets.rpglogs.com/img/ff/bosses/1083-icon.jpg">
+        <h5 class="card-title"> {{ encounter }} </h5>
+    </div>
+    
+    <p>Please note: This is a naive implementation which will be progressively improved. Information on the methodology can be found at the bottom of the page.</p>
+    <div class="tabset">
+        <input 
+            type="radio" 
+            id="tab-cardplay" 
+            name="tab-cards" 
+            checked
+            aria-hidden="true"
+        >
+        <input 
+            type="radio" 
+            id="tab-details" 
+            name="tab-cards" 
+            aria-hidden="true"
+        >
+        <ul aria-hidden="true">
+            <li><label for="tab-cardplay"><span><ActionFetch name="The Balance" :id="37023" /></span> - Melee</label></li>
+            <li><label for="tab-details"><span><ActionFetch name="The Spear" :id="37026" /></span> - Ranged</label></li>
+        </ul>
+    <div>
+        <section>
+            <h2>The Balance - Melee</h2>
+            <div class="content">
+                    <div class="col">
+                        <div class="table-responsive-md">
+                            <table class="table table-striped">
+                                <thead>
+                                    <div>
+                                        <tr>
+                                            <th scope="col">
+                                                Job
+                                            </th>
+                                            <th scope="col">
+                                                <span data-toggle="tooltip" data-placement="bottom" title="The median of all logged pull data.">Average</span>
+                                            </th>
+                                            <th scope="col">
+                                                Max
+                                            <th scope="col">
+                                                <span data-toggle="tooltip" data-placement="bottom" title="Total number of windows used to obtain the average.">Total</span>
+                                            </th>
+                                        </tr>
+                                    </div>
+                                </thead>
+                                <tbody>
+                                        {% for m in melee_list %}
+                                        <tr>
+                                            <td>{{ m[0] }}</td>
+                                            <td>{{ m[1] }}</td>
+                                            <td>{{ m[2] }}</td>
+                                            <td>{{ m[3] }}</td>
+                                        {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+        </section>
+
+        <section>
+            <h2>The Spear - Ranged</h2>
+            <div class="content">
+                <div class="col">
+                        <div class="table-responsive-md">
+                            <table class="table table-striped">
+                                <thead>
+                                    <div>
+                                        <tr>
+                                            <th scope="col">
+                                                Job
+                                            </th>
+                                            <th scope="col">
+                                                <span data-toggle="tooltip" data-placement="bottom" title="The median of all logged pull data.">Average</span>
+                                            </th>
+                                            <th scope="col">
+                                                Max
+                                            <th scope="col">
+                                                <span data-toggle="tooltip" data-placement="bottom" title="Total number of windows used to obtain the average.">Total</span>
+                                            </th>
+                                        </tr>
+                                    </div>
+                                </thead>
+                                <tbody>
+                                        {% for m in ranged_list %}
+                                        <tr>
+                                            <td>{{ m[0] }}</td>
+                                            <td>{{ m[1] }}</td>
+                                            <td>{{ m[2] }}</td>
+                                            <td>{{ m[3] }}</td>
+                                        {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                <hr>
+            </div>
+        </section>
+        </div>
+    </div>
+
+    <h2>Methodology: </h2>
+
+{% endblock %}

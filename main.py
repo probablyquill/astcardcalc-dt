@@ -325,5 +325,51 @@ def calc(report_id, fight_id):
 
     #Track best targets to compile in database
     track_targets(report)
-
+    
     return render_template('calc.html', report=report)
+
+@app.route('/encounter/<string:encounter>/')
+def encounter_report(encounter):
+    client = psycopg2.connect(database=PG_DB, host=PG_SERVER, user=PG_USER, password=PG_PW, port=PG_PORT)
+    cur = client.cursor()
+
+    sql = """SELECT DISTINCT encounterid FROM targets;"""
+    cur.execute(sql)
+    encounters = cur.fetchall()
+
+    cleaned_encounters = []
+    for e in encounters:
+        cleaned_encounters.append((e[0]))
+    
+    # This is not my favorite way to do this but it does work and is very concise.
+    lower_list = [e.lower() for e in cleaned_encounters]
+
+    try:
+        index = lower_list.index(encounter.lower())
+    except ValueError:
+        return render_template('error.html', exception="Database Error: Encounter not found.")
+
+    # The point of this segment is to correctly pull capitalization / punctuation from the DB's encounterid.
+    encounter = cleaned_encounters[index]
+    
+    sql = """SELECT job, cardid, difficulty, average, max, total FROM targets WHERE LOWER(encounterid) LIKE LOWER(%s) ORDER BY average DESC"""
+    cur.execute(sql, (encounter,))
+    encounter_data = cur.fetchall()
+
+    ranged_list = []    # 37023 = The Balance
+    melee_list = []     # 37026 = The Spear
+
+    # Since everything is arriving pre-sorted by the database, we'll just split it by card types as is.
+    for item in encounter_data:
+        # We will need difficulty later for distinguishing between normal and savage. It does not matter for ex.
+        job, card, difficulty, average, max, total = item
+        job = job[0].upper() + job[1:]
+        if card == 37023:
+            melee_list.append((job, average, max, total))
+        elif card == 37026:
+            ranged_list.append((job, average, max, total))
+
+    ranged_list = ranged_list[:8]
+    melee_list = melee_list[:8]
+    return render_template('encounter.html', ranged_list=ranged_list, melee_list=melee_list, encounter=encounter)
+    # return render_template('encounter.html', data=data)
