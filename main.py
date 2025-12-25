@@ -93,6 +93,7 @@ WHERE computed < {};""".format(computed_cutoff)
     client.close()
 
 def track_targets(report):
+    print(report)
     client = psycopg2.connect(database=PG_DB, host=PG_SERVER, user=PG_USER, password=PG_PW, port=PG_PORT)
     cur = client.cursor()
 
@@ -122,7 +123,7 @@ def track_targets(report):
                     job_result = cleaned_data[(job, card)]
                 else:
                     job_result = None
-                sql = "SELECT average, max, total FROM targets WHERE job=%s AND cardId=%s AND encounterId=%s AND difficulty=%s;"
+                # sql = "SELECT average, max, total FROM targets WHERE job=%s AND cardId=%s AND encounterId=%s AND difficulty=%s;"
                 # cur.execute(sql, (job, card, encounter_id, difficulty))
                 # job_result = cur.fetchone()
 
@@ -330,6 +331,7 @@ def calc(report_id, fight_id):
 
 @app.route('/encounter/<string:encounter>/')
 def encounter_report(encounter):
+    print(encounter)
     client = psycopg2.connect(database=PG_DB, host=PG_SERVER, user=PG_USER, password=PG_PW, port=PG_PORT)
     cur = client.cursor()
 
@@ -342,7 +344,7 @@ def encounter_report(encounter):
         cleaned_encounters.append((e[0]))
     
     # This is not my favorite way to do this but it does work and is very concise.
-    lower_list = [e.lower() for e in cleaned_encounters]
+    lower_list = [e.lower().replace(" ", "") for e in cleaned_encounters]
 
     try:
         index = lower_list.index(encounter.lower())
@@ -363,7 +365,10 @@ def encounter_report(encounter):
     for item in encounter_data:
         # We will need difficulty later for distinguishing between normal and savage. It does not matter for ex.
         job, card, difficulty, average, max, total = item
+
+        # Smile
         job = job[0].upper() + job[1:]
+
         if card == 37023:
             melee_list.append((job, average, max, total))
         elif card == 37026:
