@@ -208,18 +208,6 @@ def calc(report_id, fight_id):
 
     if (query_res != None):
 
-        sql_report = {
-            'report_id': query_res[0],
-            'fight_id': query_res[1],
-            'results': json.loads(query_res[2]),
-            'actors': json.loads(query_res[3]),
-            'enc_name': query_res[4],
-            'enc_time': query_res[5],
-            'enc_kill': query_res[6],
-            'computed': (datetime.fromisoformat(query_res[7]).replace(tzinfo=pytz.UTC)),
-            'difficulty': query_res[8]
-        }
-
         report = {
             'report_id': query_res[0],
             'fight_id': query_res[1],
@@ -234,7 +222,7 @@ def calc(report_id, fight_id):
 
         # sql_report['computed'] = sql_report['computed'].replace(tzinfo=pytz.UTC)
 
-    if sql_report is None:
+    if report is None:
         # Compute
         try:
             results, actors, encounter_info = cardcalc(
@@ -242,17 +230,6 @@ def calc(report_id, fight_id):
         except CardCalcException as exception:
             return render_template('error.html', exception=exception)
 
-        sql_report = {
-            'report_id': report_id,
-            'fight_id': fight_id,
-            'results': json.dumps(results),
-            'actors': json.dumps(actors),
-            'enc_name': encounter_info['enc_name'],
-            'enc_time': encounter_info['enc_time'],
-            'enc_kill': encounter_info['enc_kill'],
-            'computed': datetime.now().isoformat(),
-            'difficulty': encounter_info['difficulty'],
-        }
         report = {
             'report_id': report_id,
             'fight_id': fight_id,
@@ -270,8 +247,8 @@ def calc(report_id, fight_id):
             reports(report_id, fight_id, results, actors, enc_name, enc_time, enc_kill, computed, difficulty) 
             VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s);
             """
-        cur.execute(sql, (sql_report['report_id'], sql_report['fight_id'], sql_report['results'], 
-                                sql_report['actors'], sql_report['enc_name'], sql_report['enc_time'], sql_report['enc_kill'], sql_report['computed'], sql_report['difficulty']))
+        cur.execute(sql, (report['report_id'], report['fight_id'], json.dumps(report['results']), 
+                                json.dumps(report['actors']), report['enc_name'], report['enc_time'], report['enc_kill'], report['computed'].isoformat(), report['difficulty']))
 
         client.commit()
         client.close()
@@ -285,25 +262,13 @@ def calc(report_id, fight_id):
         # print(type(LAST_CALC_DATE))
 
         # Recompute if no computed timestamp
-        print(sql_report['computed'])
-        if sql_report['computed'] < LAST_CALC_DATE:
+        if report['computed'] < LAST_CALC_DATE:
             try:
                 results, actors, encounter_info = cardcalc(
                     report_id, fight_id, token)
             except CardCalcException as exception:
                 return render_template('error.html', exception=exception)
 
-            sql_report = {
-                'report_id': report_id,
-                'fight_id': fight_id,
-                'results': json.dumps(results),
-                'actors': json.dumps(actors),
-                'enc_name': encounter_info['enc_name'],
-                'enc_time': encounter_info['enc_time'],
-                'enc_kill': encounter_info['enc_kill'],
-                'computed': datetime.now().isoformat(),
-                'difficulty': encounter_info['difficulty'],
-            }
             report = {
                 'report_id': report_id,
                 'fight_id': fight_id,
@@ -316,13 +281,13 @@ def calc(report_id, fight_id):
                 'difficulty': encounter_info['difficulty'],
             }
             sql = """INSERT OR REPLACE INTO
-            reports(report_id, fight_id, results, actors, enc_name, enc_time, enc_kill, computed) 
-            VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"""
+            reports(report_id, fight_id, results, actors, enc_name, enc_time, enc_kill, computed, difficulty) 
+            VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s);"""
             
             sql.replace("'", "\'")
             sql.replace('\"', "\"")
-            row_result = cur.execute(sql, (sql_report['report_id'], sql_report['fight_id'], sql_report['results'], 
-                                           sql_report['actors'], sql_report['enc_name'], sql_report['enc_kill'], sql_report['computed']))
+            cur.execute(sql, (report['report_id'], report['fight_id'], json.dumps(report['results']), 
+                                           json.dumps(report['actors']), report['enc_name'], report['enc_kill'], report['computed'].isoformat, report['difficulty']))
 
             client.commit()
             client.close()
