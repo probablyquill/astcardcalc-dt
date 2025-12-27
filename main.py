@@ -22,7 +22,7 @@ PG_DB = "cardcalc"
 PG_PORT = "5432"
 
 app = Flask(__name__)
-LAST_CALC_DATE = pytz.UTC.localize(datetime.utcfromtimestamp(1663886556))
+LAST_CALC_DATE = pytz.UTC.localize(datetime.now())
 token = get_bearer_token()
 
 client = psycopg2.connect(database=PG_DB, host=PG_SERVER, user=PG_USER, password=PG_PW, port=PG_PORT)
@@ -390,4 +390,3 @@ def encounter_report(encounter):
     melee_list = [opener_melee, non_opener_melee]
 
     return render_template('encounter.html', ranged_list=ranged_list, melee_list=melee_list, encounter=encounter)
-    # return render_template('encounter.html', data=data)
