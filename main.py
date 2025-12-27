@@ -17,7 +17,7 @@ from cardcalc_cards import cardcalc
 PG_USER = os.environ['PG_USER']
 PG_PW = os.environ['PG_PASSWORD']
 
-PG_SERVER = "50.116.36.193"
+PG_SERVER = "127.0.0.1"
 PG_DB = "cardcalc"
 PG_PORT = "5432"
 
@@ -35,6 +35,7 @@ cur.execute("CREATE TABLE IF NOT EXISTS targets(job TEXT, cardId INT, encounterI
 #Check on the report total counting / establish the counter if doesn't exist:
 count = cur.execute("SELECT * FROM counts;")
 count = cur.fetchone()
+
 if count == None:
     cur.execute("INSERT INTO counts(total_reports) values(0);")
 
@@ -122,7 +123,6 @@ def track_targets(report):
             is_opener = False
             if startTime < 31: is_opener = True
 
-            print(f"Adding Window Opening At: {startTime} | OPENER={is_opener}")
             for row in window['cardDamageTable']:
                 job = row['job']
                 damage = row['adjustedDamage']
@@ -201,11 +201,24 @@ def calc(report_id, fight_id):
     sql_report = None
     report = None
 
-    sql = """SELECT * FROM reports WHERE report_id=%s AND fight_id=%s ORDER BY computed DESC;"""
-    query_res = cur.execute(sql, (str(report_id), fight_id))
+    sql = """SELECT * FROM reports WHERE report_id=%s AND fight_id=%s ORDER BY COMPUTED DESC;"""
+    cur.execute(sql, (str(report_id), fight_id))
+
+    query_res = cur.fetchone()
 
     if (query_res != None):
-        query_res.fetchone()
+
+        sql_report = {
+            'report_id': query_res[0],
+            'fight_id': query_res[1],
+            'results': json.loads(query_res[2]),
+            'actors': json.loads(query_res[3]),
+            'enc_name': query_res[4],
+            'enc_time': query_res[5],
+            'enc_kill': query_res[6],
+            'computed': (datetime.fromisoformat(query_res[7]).replace(tzinfo=pytz.UTC)),
+            'difficulty': query_res[8]
+        }
 
         report = {
             'report_id': query_res[0],
@@ -215,8 +228,11 @@ def calc(report_id, fight_id):
             'enc_name': query_res[4],
             'enc_time': query_res[5],
             'enc_kill': query_res[6],
-            'computed': query_res[7],
+            'computed': (datetime.fromisoformat(query_res[7]).replace(tzinfo=pytz.UTC)),
+            'difficulty': query_res[8]
         }
+
+        # sql_report['computed'] = sql_report['computed'].replace(tzinfo=pytz.UTC)
 
     if sql_report is None:
         # Compute
@@ -254,10 +270,8 @@ def calc(report_id, fight_id):
             reports(report_id, fight_id, results, actors, enc_name, enc_time, enc_kill, computed, difficulty) 
             VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s);
             """
-        row_result = cur.execute(sql, (sql_report['report_id'], sql_report['fight_id'], sql_report['results'], 
+        cur.execute(sql, (sql_report['report_id'], sql_report['fight_id'], sql_report['results'], 
                                 sql_report['actors'], sql_report['enc_name'], sql_report['enc_time'], sql_report['enc_kill'], sql_report['computed'], sql_report['difficulty']))
-        # print(row_result)
-
 
         client.commit()
         client.close()
@@ -271,6 +285,7 @@ def calc(report_id, fight_id):
         # print(type(LAST_CALC_DATE))
 
         # Recompute if no computed timestamp
+        print(sql_report['computed'])
         if sql_report['computed'] < LAST_CALC_DATE:
             try:
                 results, actors, encounter_info = cardcalc(
@@ -314,7 +329,7 @@ def calc(report_id, fight_id):
 
     report['results'] = {int(k): v for k, v in report['results'].items()}
     report['actors'] = {int(k): v for k, v in report['actors'].items()}
-
+    
     report['results'] = list(OrderedDict(
         sorted(report['results'].items())).values())
     actors = {int(k): v for k, v in report['actors'].items()}
@@ -393,7 +408,6 @@ def encounter_report(encounter):
     non_opener_melee = []
 
     for r in ranged_list:
-        print(r)
         if r[1]: opener_ranged.append(r)
         else: non_opener_ranged.append(r)
 
