@@ -198,7 +198,6 @@ def calc(report_id, fight_id):
     if (len(report_id) < 14 or len(report_id) > 24):
         return redirect(url_for('homepage'))
 
-    sql_report = None
     report = None
 
     sql = """SELECT * FROM reports WHERE report_id=%s AND fight_id=%s ORDER BY COMPUTED DESC;"""
@@ -247,8 +246,15 @@ def calc(report_id, fight_id):
             reports(report_id, fight_id, results, actors, enc_name, enc_time, enc_kill, computed, difficulty) 
             VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s);
             """
-        cur.execute(sql, (report['report_id'], report['fight_id'], json.dumps(report['results']), 
-                                json.dumps(report['actors']), report['enc_name'], report['enc_time'], report['enc_kill'], report['computed'].isoformat(), report['difficulty']))
+        cur.execute(sql, (report['report_id'], 
+                          report['fight_id'], 
+                          json.dumps(report['results']), 
+                          json.dumps(report['actors']), 
+                          report['enc_name'], 
+                          report['enc_time'], 
+                          report['enc_kill'], 
+                          report['computed'].isoformat(), 
+                          report['difficulty']))
 
         client.commit()
         client.close()
@@ -262,7 +268,7 @@ def calc(report_id, fight_id):
         # print(type(LAST_CALC_DATE))
 
         # Recompute if no computed timestamp
-        if report['computed'] < LAST_CALC_DATE:
+        if report['computed'] < LAST_CALC_DATE: #pytz.UTC.localize(datetime.now()): # 
             try:
                 results, actors, encounter_info = cardcalc(
                     report_id, fight_id, token)
@@ -280,14 +286,12 @@ def calc(report_id, fight_id):
                 'computed': datetime.now(),
                 'difficulty': encounter_info['difficulty'],
             }
-            sql = """INSERT OR REPLACE INTO
-            reports(report_id, fight_id, results, actors, enc_name, enc_time, enc_kill, computed, difficulty) 
-            VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s);"""
+            sql = """UPDATE reports SET results=%s, computed=%s  WHERE report_id=%s;"""
             
             sql.replace("'", "\'")
             sql.replace('\"', "\"")
-            cur.execute(sql, (report['report_id'], report['fight_id'], json.dumps(report['results']), 
-                                           json.dumps(report['actors']), report['enc_name'], report['enc_kill'], report['computed'].isoformat, report['difficulty']))
+ 
+            cur.execute(sql, (json.dumps(report['results']), report['computed'].isoformat(), report['report_id']))
 
             client.commit()
             client.close()
