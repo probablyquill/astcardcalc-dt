@@ -311,7 +311,6 @@ def calc(report_id, fight_id):
 
 @app.route('/encounter/<string:encounter>/')
 def encounter_report(encounter):
-    print(encounter)
     client = psycopg2.connect(database=PG_DB, host=PG_SERVER, user=PG_USER, password=PG_PW, port=PG_PORT)
     cur = client.cursor()
 
@@ -340,36 +339,29 @@ def encounter_report(encounter):
 
     ranged_list = []    # 37023 = The Balance
     melee_list = []     # 37026 = The Spear
+    savage_ranged_list = []
+    savage_melee_list = []
 
-    savage_present = False
     # Since everything is arriving pre-sorted by the database, we'll just split it by card types as is.
     for item in encounter_data:
         # We will need difficulty later for distinguishing between normal and savage. It does not matter for ex.
         job, card, difficulty, opener, average, max, total = item
 
-        if difficulty == 101: savage_present = True
-        if difficulty == 100 and savage_present == True: continue
+        # Checks for savage first since normal data will be ignored if savage is present anyways.
+        if difficulty == 101:
+            if card == 37023: savage_melee_list.append((job, opener, difficulty, average, max, total))
+            elif card == 37026: savage_ranged_list.append((job, opener, difficulty, average, max, total))
 
-        if card == 37023:
-            melee_list.append((job, opener, difficulty, average, max, total))
-        elif card == 37026:
-            ranged_list.append((job, opener, difficulty, average, max, total))
+        elif difficulty == 100:
+            if card == 37023: melee_list.append((job, opener, difficulty, average, max, total))
+            elif card == 37026: ranged_list.append((job, opener, difficulty, average, max, total))
 
-    # TODO this 'works' but is a temporary solution until I find one I like better.
-    if savage_present:
-        new_ranged = []
-        new_melee = []
-
-        for item in ranged_list: 
-            if item[2] == 101: new_ranged.add(item)
-        for item in melee_list: 
-            if item[2] == 101: new_melee.add(item)
-
-        ranged_list = new_ranged
-        melee_list = new_melee
-
+    # Overwrite the standard lists if the savage lists were filled.
+    if len(savage_ranged_list) != 0:
+        ranged_list = savage_ranged_list
+        melee_list = savage_melee_list
+        
     # Finally, break out into opener vs not.
-
     opener_ranged = []
     opener_melee = []
 
