@@ -320,14 +320,16 @@ query reportData($code: String!, $startTime: Float!, $endTime: Float!) {
                 endTime: $endTime,
                 dataType: Buffs,
                 limit: 10000,
-                filterExpression: "ability.id in (1000749, 1000501, 1001205, 1000312, 1001869)"
+                filterExpression: "ability.id in (1000749, 1000501, 1002706, 1001205, 1000312, 1001869)"
             ) {
                 data
             }
         }
     }
 }
-"""
+""" 
+# Tick Events -> filterExpression id not in ?, ?, ?, ?
+# Ground Events -> filterExpression id in Salted Earth, Doton, Slipstream, ?, ?, ?
 
     data = call_fflogs_api(query, variables, token)
 

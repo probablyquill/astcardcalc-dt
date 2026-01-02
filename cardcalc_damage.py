@@ -75,6 +75,7 @@ def calc_snapshot_damage(damage_events):
     damage_report = pd.DataFrame(summed_tick_damage, columns=[
                                  'timestamp', 'type', 'sourceID', 'targetID', 'abilityGameID', 'amount', 'hitType', 'directHit'])
     damage_report.sort_values(by='timestamp', inplace=True, ignore_index=True)
+
     return damage_report
 
 
