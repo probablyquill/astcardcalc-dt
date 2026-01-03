@@ -20,7 +20,8 @@ def calc_snapshot_damage(damage_events):
 
     for event in damage_events['tickDamage']:
         action = (event['sourceID'], event['targetID'], event['abilityGameID'])
-
+        if action[2] == 1000749: print(f"Checking {action[2]} from {action[0]} on {action[1]} as {event['type']}")
+        
         # these events are either:
         # - apply{buff/debuff}
         # - reapply{buff,debuff}
@@ -36,13 +37,18 @@ def calc_snapshot_damage(damage_events):
         if event['type'] in ['applybuff', 'refreshbuff', 'applydebuff', 'refreshdebuff'] and event['timestamp']:
             # if it's not an active effect then add it
             if action not in active_debuffs:
+                
                 active_debuffs[action] = {
                     'timestamp': event['timestamp'],
                     'damage': 0,
                 }
+                if action[2] == 1000749: 
+                    print("Adding to active debuffs.")
+                    print(active_debuffs)
             # if it is an active debuff then add a new damage event associated
             # with the sum and restart summing the damage from this event
             else:
+                if action[2] == 1000749: print(f"Finalizing with amount: {active_debuffs[action]['damage']}")
                 summed_tick_damage.append({
                     'type': 'damagesnapshot',
                     'sourceID': action[0],
@@ -55,9 +61,20 @@ def calc_snapshot_damage(damage_events):
                     'timestamp': event['timestamp'],
                     'damage': 0,
                 }
+
         elif event['type'] == 'damage':
             if action in active_debuffs:
+                if action[2] == 1000749: print(f"Adding {event['amount']} to total.")
                 active_debuffs[action]['damage'] += event['amount']
+
+            # In the case of ground targeted AoEs!
+            # The source and target ID for the inital buff is DIFFERENT from when it's doing damage.
+            # Normal DoT instances are applied to a target then do damage to them.
+            # GT AoEs apply to the player then do damage to enemies, breaking the tracking.
+            # Adding this additional check when the first one fails should fix ground AoEs.
+            # Here's hoping there are no unintended consequences like Bolide being coded as tick damage or something.
+            elif (action[0], action[0], action[2]) in active_debuffs:
+                active_debuffs[(action[0], action[0], action[2])]['damage'] += event['amount']
 
     # now that we're done we can add the remaining events into the damage array
     for action in active_debuffs:
