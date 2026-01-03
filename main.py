@@ -133,9 +133,9 @@ def track_targets(report):
                 if (job_result == None): cleaned_data[(job, card, is_opener)] = [damage, damage, 1]
                 else:
                     db_avg, db_max, total = job_result
-                    # My understanding is that Python Longs don't overflow so theoretically this is fine forever even if naive(?)
-                    new_avg = ((db_avg * total) + damage) / (total + 1)
-                    total+=1 
+                    total+=1
+                    new_avg = db_avg + (total - db_avg) / (total + 1)
+
                     if (db_max < damage): db_max = damage
 
                     cleaned_data[(job, card, is_opener)] = [new_avg, db_max, total]
