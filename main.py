@@ -134,7 +134,7 @@ def track_targets(report):
                 else:
                     db_avg, db_max, total = job_result
                     total+=1
-                    new_avg = db_avg + (total - db_avg) / (total + 1)
+                    new_avg = db_avg + (damage - db_avg) / (total + 1)
 
                     if (db_max < damage): db_max = damage
 
