@@ -20,7 +20,6 @@ def calc_snapshot_damage(damage_events):
 
     for event in damage_events['tickDamage']:
         action = (event['sourceID'], event['targetID'], event['abilityGameID'])
-        if action[2] == 1000749: print(f"Checking {action[2]} from {action[0]} on {action[1]} as {event['type']}")
         
         # these events are either:
         # - apply{buff/debuff}
@@ -42,13 +41,10 @@ def calc_snapshot_damage(damage_events):
                     'timestamp': event['timestamp'],
                     'damage': 0,
                 }
-                if action[2] == 1000749: 
-                    print("Adding to active debuffs.")
-                    print(active_debuffs)
+
             # if it is an active debuff then add a new damage event associated
             # with the sum and restart summing the damage from this event
             else:
-                if action[2] == 1000749: print(f"Finalizing with amount: {active_debuffs[action]['damage']}")
                 summed_tick_damage.append({
                     'type': 'damagesnapshot',
                     'sourceID': action[0],
@@ -64,7 +60,6 @@ def calc_snapshot_damage(damage_events):
 
         elif event['type'] == 'damage':
             if action in active_debuffs:
-                if action[2] == 1000749: print(f"Adding {event['amount']} to total.")
                 active_debuffs[action]['damage'] += event['amount']
 
             # In the case of ground targeted AoEs!
