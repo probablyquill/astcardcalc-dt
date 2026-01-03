@@ -186,7 +186,7 @@
             that the card calculator finds. 
         </p>
         <p>Every time the average is updated, it's re-calculated using the following: </p>
-        <code>new_average = ((old_average * total) + damage_from_damage_window) / (total + 1)</code>
+        <code>new_average = old_average + (damage_from_damage_window - old_average) / (number_of_data_points + 1)</code>
         <h3 class="pt-3">Changes I'd Like To Make:</h3>
         <ul>
             <li>Ignore outlier data, specifically if the damage is exceptionally low compared to the existing average. This would also help with any windows being ended early beacuse of killtime.</li>
