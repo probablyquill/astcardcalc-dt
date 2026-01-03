@@ -22,19 +22,20 @@ PG_DB = "cardcalc"
 PG_PORT = "5432"
 
 app = Flask(__name__)
-LAST_CALC_DATE = pytz.UTC.localize(datetime.utcfromtimestamp(1663886556))
+LAST_CALC_DATE = pytz.UTC.localize(datetime.now())
 token = get_bearer_token()
 
 client = psycopg2.connect(database=PG_DB, host=PG_SERVER, user=PG_USER, password=PG_PW, port=PG_PORT)
 cur = client.cursor()
 
-cur.execute("CREATE TABLE IF NOT EXISTS reports(report_id TEXT, fight_id INT, results TEXT, actors TEXT, enc_name TEXT, enc_time TIME, enc_kill BOOLEAN, computed TEXT);")
+cur.execute("CREATE TABLE IF NOT EXISTS reports(report_id TEXT, fight_id INT, results TEXT, actors TEXT, enc_name TEXT, enc_time TIME, enc_kill BOOLEAN, computed TEXT, difficulty INT);")
 cur.execute("CREATE TABLE IF NOT EXISTS counts(total_reports INT);")
-cur.execute("CREATE TABLE IF NOT EXISTS targets(job TEXT, cardId INT, encounterId TEXT, difficulty INT, average BIGINT, max BIGINT, total INT);")
+cur.execute("CREATE TABLE IF NOT EXISTS targets(job TEXT, cardId INT, encounterId TEXT, difficulty INT, average BIGINT, max BIGINT, total INT, opener BOOLEAN);")
 
 #Check on the report total counting / establish the counter if doesn't exist:
 count = cur.execute("SELECT * FROM counts;")
 count = cur.fetchone()
+
 if count == None:
     cur.execute("INSERT INTO counts(total_reports) values(0);")
 
@@ -100,51 +101,44 @@ def track_targets(report):
     difficulty = report['difficulty']
     if report['enc_kill'] == True and difficulty != None:
 
-        sql = "SELECT cardId, job, average, max, total FROM targets WHERE encounterId=%s AND difficulty=%s"
+        sql = "SELECT cardId, job, average, max, total, opener FROM targets WHERE encounterId=%s AND difficulty=%s"
         cur.execute(sql, (encounter_id, difficulty))
         job_data = cur.fetchall()
 
         cleaned_data = {}
 
         for j in job_data:
-            card, job_name, average, max, total = j
-            cleaned_data[(job_name, card)] = [average, max, total]
+            card, job_name, average, max, total, opener = j
+            cleaned_data[(job_name, card, opener)] = [average, max, total]
 
         # Loop through the all jobs present on each play window and save their adjusted damage to the database.
         for window in report['results']:
+
             if 'cardId' not in window: continue
             card = window['cardId']
+
+            startTime = window['startTime']
+            startTime = int(startTime[:-3]) * 60 + int(startTime[-2:])
+            
+            is_opener = False
+            if startTime < 31: is_opener = True
+
             for row in window['cardDamageTable']:
-                job = row['job'].lower()
+                job = row['job']
                 damage = row['adjustedDamage']
 
-                if ((job, card) in cleaned_data):
-                    job_result = cleaned_data[(job, card)]
-                else:
-                    job_result = None
-                sql = "SELECT average, max, total FROM targets WHERE job=%s AND cardId=%s AND encounterId=%s AND difficulty=%s;"
-                # cur.execute(sql, (job, card, encounter_id, difficulty))
-                # job_result = cur.fetchone()
+                if ((job, card, is_opener) in cleaned_data): job_result = cleaned_data[(job, card, is_opener)]
+                else: job_result = None
 
-                if (job_result == None):
-                    # sql = "INSERT INTO targets(job, cardId, encounterId, difficulty, average, max, total) VALUES (%s, %s, %s, %s, %s, %s, %s);"
-                    # cur.execute(sql, (job, card, encounter_id, difficulty, damage, damage, 1))
-                    cleaned_data[(job, card)] = [damage, damage, 1]
+                if (job_result == None): cleaned_data[(job, card, is_opener)] = [damage, damage, 1]
                 else:
                     db_avg, db_max, total = job_result
-                    # My understanding is that Python Longs don't overflow so theoretically this is fine forever even if naive(?)
-                    new_avg = ((db_avg * total) + damage) / (total + 1)
-                    total+=1 
+                    total+=1
+                    new_avg = db_avg + (damage - db_avg) / (total + 1)
+
                     if (db_max < damage): db_max = damage
 
-                    cleaned_data[(job, card)] = [new_avg, db_max, total]
-
-                    # Cannot use REPLACE because there is no Unique or Primary key, it may best to restructure the DB but for now this gets to the exact functionality I need.
-                    # sql = "DELETE FROM targets WHERE job=%s AND cardId=%s AND encounterId=%s AND difficulty = %s"
-                    # cur.execute(sql, (job, card, encounter_id, difficulty))
-
-                    # sql = "INSERT INTO targets(job, cardId, encounterId, difficulty, average, max, total) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-                    # cur.execute(sql, (job, card, encounter_id, difficulty, new_avg, db_max, total))
+                    cleaned_data[(job, card, is_opener)] = [new_avg, db_max, total]
         
         # Changed to batch all insert / delete records together to make it not take 5 seconds because of networking.
         
@@ -152,13 +146,15 @@ def track_targets(report):
         cur.execute(sql, (encounter_id, difficulty))
 
         sql_data = []
-        for job, card in cleaned_data:
-            avg, max, total = cleaned_data[(job, card)]
+
+        for job, card, opener in cleaned_data:
+            avg, max, total = cleaned_data[(job, card, opener)]
+
             sql_data.append(
-                (job, card, encounter_id, difficulty, avg, max, total)
+                (job, card, encounter_id, difficulty, avg, max, total, opener)
             )
 
-        sql = "INSERT INTO targets(job, cardId, encounterId, difficulty, average, max, total) VALUES %s"
+        sql = "INSERT INTO targets(job, cardId, encounterId, difficulty, average, max, total, opener) VALUES %s;"
         psycopg2.extras.execute_values(cur, sql, sql_data)
 
     client.commit()
@@ -202,14 +198,14 @@ def calc(report_id, fight_id):
     if (len(report_id) < 14 or len(report_id) > 24):
         return redirect(url_for('homepage'))
 
-    sql_report = None
     report = None
 
-    sql = """SELECT * FROM reports WHERE report_id=%s AND fight_id=%s ORDER BY computed DESC;"""
-    query_res = cur.execute(sql, (str(report_id), fight_id))
+    sql = """SELECT * FROM reports WHERE report_id=%s AND fight_id=%s ORDER BY COMPUTED DESC;"""
+    cur.execute(sql, (str(report_id), fight_id))
+
+    query_res = cur.fetchone()
 
     if (query_res != None):
-        query_res.fetchone()
 
         report = {
             'report_id': query_res[0],
@@ -219,10 +215,13 @@ def calc(report_id, fight_id):
             'enc_name': query_res[4],
             'enc_time': query_res[5],
             'enc_kill': query_res[6],
-            'computed': query_res[7],
+            'computed': (datetime.fromisoformat(query_res[7]).replace(tzinfo=pytz.UTC)),
+            'difficulty': query_res[8]
         }
 
-    if sql_report is None:
+        # sql_report['computed'] = sql_report['computed'].replace(tzinfo=pytz.UTC)
+
+    if report is None:
         # Compute
         try:
             results, actors, encounter_info = cardcalc(
@@ -230,17 +229,6 @@ def calc(report_id, fight_id):
         except CardCalcException as exception:
             return render_template('error.html', exception=exception)
 
-        sql_report = {
-            'report_id': report_id,
-            'fight_id': fight_id,
-            'results': json.dumps(results),
-            'actors': json.dumps(actors),
-            'enc_name': encounter_info['enc_name'],
-            'enc_time': encounter_info['enc_time'],
-            'enc_kill': encounter_info['enc_kill'],
-            'computed': datetime.now().isoformat(),
-            'difficulty': encounter_info['difficulty'],
-        }
         report = {
             'report_id': report_id,
             'fight_id': fight_id,
@@ -255,12 +243,18 @@ def calc(report_id, fight_id):
 
         # print(sql_report)
         sql = """INSERT INTO
-            reports(report_id, fight_id, results, actors, enc_name, enc_time, enc_kill, computed) 
-            VALUES(%s, %s, %s, %s, %s, %s, %s, %s);
+            reports(report_id, fight_id, results, actors, enc_name, enc_time, enc_kill, computed, difficulty) 
+            VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s);
             """
-        row_result = cur.execute(sql, (sql_report['report_id'], sql_report['fight_id'], sql_report['results'], 
-                                sql_report['actors'], sql_report['enc_name'], sql_report['enc_time'], sql_report['enc_kill'], sql_report['computed']))
-        # print(row_result)
+        cur.execute(sql, (report['report_id'], 
+                          report['fight_id'], 
+                          json.dumps(report['results']), 
+                          json.dumps(report['actors']), 
+                          report['enc_name'], 
+                          report['enc_time'], 
+                          report['enc_kill'], 
+                          report['computed'].isoformat(), 
+                          report['difficulty']))
 
         client.commit()
         client.close()
@@ -274,24 +268,13 @@ def calc(report_id, fight_id):
         # print(type(LAST_CALC_DATE))
 
         # Recompute if no computed timestamp
-        if sql_report['computed'] < LAST_CALC_DATE:
+        if report['computed'] < LAST_CALC_DATE: #pytz.UTC.localize(datetime.now()): # 
             try:
                 results, actors, encounter_info = cardcalc(
                     report_id, fight_id, token)
             except CardCalcException as exception:
                 return render_template('error.html', exception=exception)
 
-            sql_report = {
-                'report_id': report_id,
-                'fight_id': fight_id,
-                'results': json.dumps(results),
-                'actors': json.dumps(actors),
-                'enc_name': encounter_info['enc_name'],
-                'enc_time': encounter_info['enc_time'],
-                'enc_kill': encounter_info['enc_kill'],
-                'computed': datetime.now().isoformat(),
-                'difficulty': encounter_info['difficulty'],
-            }
             report = {
                 'report_id': report_id,
                 'fight_id': fight_id,
@@ -303,21 +286,19 @@ def calc(report_id, fight_id):
                 'computed': datetime.now(),
                 'difficulty': encounter_info['difficulty'],
             }
-            sql = """INSERT OR REPLACE INTO
-            reports(report_id, fight_id, results, actors, enc_name, enc_time, enc_kill, computed) 
-            VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"""
+            sql = """UPDATE reports SET results=%s, computed=%s  WHERE report_id=%s;"""
             
             sql.replace("'", "\'")
             sql.replace('\"', "\"")
-            row_result = cur.execute(sql, (sql_report['report_id'], sql_report['fight_id'], sql_report['results'], 
-                                           sql_report['actors'], sql_report['enc_name'], sql_report['enc_kill'], sql_report['computed']))
+ 
+            cur.execute(sql, (json.dumps(report['results']), report['computed'].isoformat(), report['report_id']))
 
             client.commit()
             client.close()
 
     report['results'] = {int(k): v for k, v in report['results'].items()}
     report['actors'] = {int(k): v for k, v in report['actors'].items()}
-
+    
     report['results'] = list(OrderedDict(
         sorted(report['results'].items())).values())
     actors = {int(k): v for k, v in report['actors'].items()}
@@ -325,5 +306,83 @@ def calc(report_id, fight_id):
 
     #Track best targets to compile in database
     track_targets(report)
-
+    
     return render_template('calc.html', report=report)
+
+@app.route('/encounter/<string:encounter>/')
+def encounter_report(encounter):
+    client = psycopg2.connect(database=PG_DB, host=PG_SERVER, user=PG_USER, password=PG_PW, port=PG_PORT)
+    cur = client.cursor()
+
+    sql = """SELECT DISTINCT encounterid FROM targets;"""
+    cur.execute(sql)
+    encounters = cur.fetchall()
+
+    cleaned_encounters = []
+    for e in encounters:
+        cleaned_encounters.append((e[0]))
+    
+    # This is not my favorite way to do this but it does work and is very concise.
+    lower_list = [e.lower().replace(" ", "") for e in cleaned_encounters]
+
+    try:
+        index = lower_list.index(encounter.lower())
+    except ValueError:
+        return render_template('error.html', exception="Database Error: Encounter not found.")
+
+    # The point of this segment is to correctly pull capitalization / punctuation from the DB's encounterid.
+    encounter = cleaned_encounters[index]
+    
+    sql = """SELECT job, cardid, difficulty, opener, average, max, total FROM targets WHERE encounterid=%s ORDER BY average DESC"""
+    cur.execute(sql, (encounter,))
+    encounter_data = cur.fetchall()
+
+    ranged_list = []    # 37023 = The Balance
+    melee_list = []     # 37026 = The Spear
+    savage_ranged_list = []
+    savage_melee_list = []
+
+    # Since everything is arriving pre-sorted by the database, we'll just split it by card types as is.
+    for item in encounter_data:
+        # We will need difficulty later for distinguishing between normal and savage. It does not matter for ex.
+        job, card, difficulty, opener, average, max, total = item
+
+        # Checks for savage first since normal data will be ignored if savage is present anyways.
+        if difficulty == 101:
+            if card == 37023: savage_melee_list.append((job, opener, difficulty, average, max, total))
+            elif card == 37026: savage_ranged_list.append((job, opener, difficulty, average, max, total))
+
+        elif difficulty == 100:
+            if card == 37023: melee_list.append((job, opener, difficulty, average, max, total))
+            elif card == 37026: ranged_list.append((job, opener, difficulty, average, max, total))
+
+    # Overwrite the standard lists if the savage lists were filled.
+    if len(savage_ranged_list) != 0:
+        ranged_list = savage_ranged_list
+        melee_list = savage_melee_list
+        
+    # Finally, break out into opener vs not.
+    opener_ranged = []
+    opener_melee = []
+
+    non_opener_ranged = []
+    non_opener_melee = []
+
+    for r in ranged_list:
+        if r[1]: opener_ranged.append(r)
+        else: non_opener_ranged.append(r)
+
+    for m in melee_list:
+        if m[1]: opener_melee.append(m)
+        else: non_opener_melee.append(m)
+
+    opener_ranged = opener_ranged[:8]
+    opener_melee = opener_melee[:8]
+
+    non_opener_melee = non_opener_melee[:8]
+    non_opener_ranged = non_opener_ranged[:8]
+
+    ranged_list = [opener_ranged, non_opener_ranged]
+    melee_list = [opener_melee, non_opener_melee]
+
+    return render_template('encounter.html', ranged_list=ranged_list, melee_list=melee_list, encounter=encounter)

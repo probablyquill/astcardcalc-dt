@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="card mb-4 p-2">
+        {% if encounter=="Doomtrain"%}
+        <img src="https://assets.rpglogs.com/img/ff/bosses/1083-icon.jpg">
+        {% elif encounter=="Futures Rewritten" %}
+        <img src="https://assets.rpglogs.com/img/ff/zones/zone-65.png">
+        {% endif %}
+
+        <h5 class="card-title"> {{ encounter }} </h5>
+    </div>
+    
+    <p>Please note: This is a naive implementation which will be progressively improved. Information on the methodology can be found at the bottom of the page.</p>
+    <div class="tabset">
+        <input 
+            type="radio" 
+            id="tab-cardplay" 
+            name="tab-cards" 
+            checked
+            aria-hidden="true"
+        >
+        <input 
+            type="radio" 
+            id="tab-details" 
+            name="tab-cards" 
+            aria-hidden="true"
+        >
+        <ul aria-hidden="true">
+            <li><label for="tab-cardplay"><span><ActionFetch name="The Balance" :id="37023" /></span> - Melee</label></li>
+            <li><label for="tab-details"><span><ActionFetch name="The Spear" :id="37026" /></span> - Ranged</label></li>
+        </ul>
+    <div>
+        <section>
+            <h2>The Balance - Melee</h2>
+            <div class="content">
+                    <div class="col">
+                        <div class="table-responsive-md">
+                            <h3>Opener:</h3>
+                            <table class="table table-striped">
+                                <thead>
+                                    <div>
+                                        <tr>
+                                            <th scope="col">
+                                                Job
+                                            </th>
+                                            <th scope="col">
+                                                <span data-toggle="tooltip" data-placement="bottom" title="The mean of all logged pull data.">Average</span>
+                                            </th>
+                                            <th scope="col">
+                                                Max
+                                            <th scope="col">
+                                                <span data-toggle="tooltip" data-placement="bottom" title="Total number of windows used to obtain the average.">Total</span>
+                                            </th>
+                                        </tr>
+                                    </div>
+                                </thead>
+                                <tbody>
+                                        {% for m in melee_list[0] %}
+                                        <tr>
+                                            <td>{{ m[0] }}</td>
+                                            <td>{{ m[3] }}</td>
+                                            <td>{{ m[4] }}</td>
+                                            <td>{{ m[5] }}</td>
+                                        {% endfor %}
+                                        
+                                </tbody>
+                            </table>
+                            <h3>2M Burst:</h3>
+                            <table class="table table-striped">
+                                <thead>
+                                    <div>
+                                        <tr>
+                                            <th scope="col">
+                                                Job
+                                            </th>
+                                            <th scope="col">
+                                                <span data-toggle="tooltip" data-placement="bottom" title="The mean of all logged pull data.">Average</span>
+                                            </th>
+                                            <th scope="col">
+                                                Max
+                                            <th scope="col">
+                                                <span data-toggle="tooltip" data-placement="bottom" title="Total number of windows used to obtain the average.">Total</span>
+                                            </th>
+                                        </tr>
+                                    </div>
+                                </thead>
+                                <tbody>
+                                        {% for m in melee_list[1] %}
+                                        <tr>
+                                            <td>{{ m[0] }}</td>
+                                            <td>{{ m[3] }}</td>
+                                            <td>{{ m[4] }}</td>
+                                            <td>{{ m[5] }}</td>
+                                        {% endfor %}
+                                        
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+        </section>
+
+        <section>
+            <h2>The Spear - Ranged</h2>
+            <div class="content">
+                <div class="col">
+                        <div class="table-responsive-md">
+                            <h3>Opener:</h3>
+                            <table class="table table-striped">
+                                <thead>
+                                    <div>
+                                        <tr>
+                                            <th scope="col">
+                                                Job
+                                            </th>
+                                            <th scope="col">
+                                                <span data-toggle="tooltip" data-placement="bottom" title="The mean of all logged pull data.">Average</span>
+                                            </th>
+                                            <th scope="col">
+                                                Max
+                                            <th scope="col">
+                                                <span data-toggle="tooltip" data-placement="bottom" title="Total number of windows used to obtain the average.">Total</span>
+                                            </th>
+                                        </tr>
+                                    </div>
+                                </thead>
+                                <tbody>
+                                        {% for m in ranged_list[0] %}
+                                        <tr>
+                                            <td>{{ m[0] }}</td>
+                                            <td>{{ m[3] }}</td>
+                                            <td>{{ m[4] }}</td>
+                                            <td>{{ m[5] }}</td>
+                                        {% endfor %}
+                                        
+                                </tbody>
+                            </table>
+                            <h3>2M Burst:</h3>
+                            <table class="table table-striped">
+                                <thead>
+                                    <div>
+                                        <tr>
+                                            <th scope="col">
+                                                Job
+                                            </th>
+                                            <th scope="col">
+                                                <span data-toggle="tooltip" data-placement="bottom" title="The mean of all logged pull data.">Average</span>
+                                            </th>
+                                            <th scope="col">
+                                                Max
+                                            <th scope="col">
+                                                <span data-toggle="tooltip" data-placement="bottom" title="Total number of windows used to obtain the average.">Total</span>
+                                            </th>
+                                        </tr>
+                                    </div>
+                                </thead>
+                                <tbody>
+                                        {% for m in ranged_list[1] %}
+                                        <tr>
+                                            <td>{{ m[0] }}</td>
+                                            <td>{{ m[3] }}</td>
+                                            <td>{{ m[4] }}</td>
+                                            <td>{{ m[5] }}</td>
+                                        {% endfor %}
+                                        
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                <hr>
+            </div>
+        </section>
+        </div>
+    </div>
+
+    <div class="mb-2">
+        <h2>Methodology:</h2>
+        <p><b>Windows in a fight are only counted towards the total tracked average if the boss is killed.</b></p>
+        <p> If a card is played within thirty seconds of the fight starting, the window is considered a part of the opener.</p>
+        <p>
+            Every time a card is played, the card calculator checks the damage done during the duration of the card by all players. 
+            This is compiled into an average (mean) based on the total number of windows checked. Maximum and averages are currently 
+            both being calculated at the moment the card is played. In the future, I will include data from the 'ideal' card uses
+            that the card calculator finds. 
+        </p>
+        <p>Every time the average is updated, it's re-calculated using the following: </p>
+        <code>new_average = old_average + (damage_from_damage_window - old_average) / (number_of_data_points + 1)</code>
+        <h3 class="pt-3">Changes I'd Like To Make:</h3>
+        <ul>
+            <li>Ignore outlier data, specifically if the damage is exceptionally low compared to the existing average. This would also help with any windows being ended early beacuse of killtime.</li>
+            <li>Incorporate the 'true' optimal target which the calculator calculates.</li>
+            <li>There's probably a better way to count / maintain the average. Since (my understanding is) Python longs don't 
+                overflow, this should be fine indefinitely, however I doubt it's the 'best' way.</li>
+            <li>It would be ideal to differentiate between windows that have pots active, or which are openers.</li>
+        </ul>
+    </div>
+
+{% endblock %}
