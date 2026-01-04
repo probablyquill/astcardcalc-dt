@@ -17,7 +17,7 @@ from cardcalc_cards import cardcalc
 PG_USER = os.environ['PG_USER']
 PG_PW = os.environ['PG_PASSWORD']
 
-PG_SERVER = "127.0.0.1"
+PG_SERVER = "50.116.36.193"
 PG_DB = "cardcalc"
 PG_PORT = "5432"
 
@@ -186,7 +186,6 @@ def about():
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                                'favicon.ico', mimetype='image/png')
-
 
 @app.route('/<string:report_id>/<int:fight_id>')
 def calc(report_id, fight_id):
@@ -386,3 +385,8 @@ def encounter_report(encounter):
     melee_list = [opener_melee, non_opener_melee]
 
     return render_template('encounter.html', ranged_list=ranged_list, melee_list=melee_list, encounter=encounter)
+
+@app.route('/encounter-list')
+def list_encounters():
+    if request.method == "GET":
+        return render_template('encounter-list.html')
