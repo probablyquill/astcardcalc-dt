@@ -386,7 +386,16 @@ def encounter_report(encounter):
 
     return render_template('encounter.html', ranged_list=ranged_list, melee_list=melee_list, encounter=encounter)
 
-@app.route('/encounter-list')
+@app.route('/encounter', strict_slashes=False)
 def list_encounters():
     if request.method == "GET":
         return render_template('encounter-list.html')
+
+@app.route('/encounter-image/<string:encounter>')
+def get_encounter_image(encounter):
+    encounter = encounter.lower().replace(" ", "")
+    encounter = encounter + ".jpg"
+    file_path = os.path.join(app.root_path, 'static/icons')
+
+    if not os.path.isfile(os.path.join(file_path, encounter)): return "Requested Image Not Found", 404
+    return send_from_directory(file_path, encounter)

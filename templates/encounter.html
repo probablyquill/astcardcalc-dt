@@ -1,17 +1,12 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="card mb-4 p-2">
-        {% if encounter=="Doomtrain"%}
-        <img src="https://assets.rpglogs.com/img/ff/bosses/1083-icon.jpg">
-        {% elif encounter=="Futures Rewritten" %}
-        <img src="https://assets.rpglogs.com/img/ff/zones/zone-65.png">
-        {% endif %}
-
-        <h5 class="card-title"> {{ encounter }} </h5>
+    <div class="card mb-4 p-2 encounter-card" style="max-width: 140px;">
+        <img style="max-width: 100px; height: auto;" src="/encounter-image/{{ encounter }}" onerror="this.style.display='none'" title="&quot;{{ encounter }}&quot; image courtesy of FFlogs.">
+        <h5 class="card-title" style="margin: 2px; margin-bottom: 0px;"> {{ encounter }} </h5>
     </div>
     
-    <p>Please note: This is a naive implementation which will be progressively improved. Information on the methodology can be found at the bottom of the page.</p>
+    <p>Please note: This is a naive implementation which I intend to improve over time. Information on the methodology can be found at the bottom of the page.</p>
     <div class="tabset">
         <input 
             type="radio" 
