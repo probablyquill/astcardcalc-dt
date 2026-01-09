@@ -73,10 +73,6 @@
 <p>This output should help to accurately predict where it might have been possible to play a card on a player while they are doing the maximum amount. However, it does have some limitations discussed below</p>
 
 <h2>Current limitations</h2>
-<p>Some notes on the current analysis with regards to the optimal target for each 'Card Play' window:</p>
-<ul>
-    <li>If multiple cards are active at the same time players that have active cards already are ignored during the later card plays without checking if an alternative play order would have been more optimal</li>
-</ul>
 
 <p>While searching for the maximum damage output possible to cover with a card play during each potential 'Card Draw' window the following considerations are not taken into account:</p>
 <ul>
@@ -95,6 +91,7 @@
 <p>Also, additional thanks to the tooltips which are provided through the <a href="https://github.com/xivapi/vue-xivtooltips">Vue-XIVTooltips</a> library.</p>
 <h2>Changes</h2>
 
+<p>2026-01-02: Fixed an issue preventing the damage from ground-targeted DoT effects from being tracked. This primary affected Dark Knight's Salted Earth, resuling in their card damage being reported as ~2% less than reality. This was fixed in commit <a href="https://github.com/probablyquill/astcardcalc-dt/commit/831bab2be7067cd3ea4444bf1ed90d08e01657c5">831bab2b</a></p>
 <p>2024-09-20: Updates for Dawntrail compatability, including the new jobs and the changes to the card system. Due to these changes the tool is no longer able to parse logs from Endwalker or other previous expansions due to the reworking of the card system. This was fixed in git commit <a href="https://github.com/probablyquill/astcardcalc-dt/commit/105eda0605d7a8f5413c5fbc30a8ba8daf6a1c7c" target="_blank">105eda0</a></p>
 <p>2022-01-17: Fixed an issue where P3S logs were not handled properly as a result of the Darkened Fire debuff. This was fixed in git commit <a href="https://github.com/meldontaragon/astcardcalc/commit/7156160430f94b83414d776ec7a3a9b41e0df95a">7156160</a></p>
 <p>2021-12-14: Updates for Endwalker compatibility. With this update this tool is no longer capable of handling older logs properly as it will no longer handle Sleeve Draw, Minor Arcana, or Divination. It now also properly considers Sage as a ranged job and Reaper as a melee job. This was fixed in git commit <a href="https://github.com/meldontaragon/astcardcalc/commit/e68c7b1e00479f48144a0a232af599e011389ca8">e68c7b1</a></p>
