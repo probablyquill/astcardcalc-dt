@@ -17,7 +17,7 @@ from cardcalc_cards import cardcalc
 PG_USER = os.environ['PG_USER']
 PG_PW = os.environ['PG_PASSWORD']
 
-PG_SERVER = "50.116.36.193"
+PG_SERVER = os.environ['PG_SERVER']
 PG_DB = "cardcalc"
 PG_PORT = "5432"
 
@@ -28,6 +28,7 @@ token = get_bearer_token()
 client = psycopg2.connect(database=PG_DB, host=PG_SERVER, user=PG_USER, password=PG_PW, port=PG_PORT)
 cur = client.cursor()
 
+# Database Setup
 cur.execute("CREATE TABLE IF NOT EXISTS reports(report_id TEXT, fight_id INT, results TEXT, actors TEXT, enc_name TEXT, enc_time TIME, enc_kill BOOLEAN, computed TEXT, difficulty INT);")
 cur.execute("CREATE TABLE IF NOT EXISTS counts(total_reports INT);")
 cur.execute("CREATE TABLE IF NOT EXISTS targets(job TEXT, cardId INT, encounterId TEXT, difficulty INT, average BIGINT, max BIGINT, total INT, opener BOOLEAN);")

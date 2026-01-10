@@ -27,3 +27,6 @@ __pycache__/
 # Ignored by the build system
 /setup.cfg
 .nginx-config
+
+#Script to pull the production DB for testing.
+pull_db.sh
