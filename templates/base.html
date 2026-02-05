@@ -39,13 +39,13 @@
       
         <div class="collapse navbar-collapse" id="navbarColor01">
           <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
+            <li class="nav-item {{ 'active' if request.path == url_for('homepage')}}">
               <a class="nav-link" href="/">Home</a>
             </li>
-            <li>
+            <li class="nav-item {{ 'active' if request.path == url_for('list_encounters')}}">
               <a class="nav-link" href="/encounter">Encounters</a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item {{ 'active' if request.path == url_for('about')}}">
               <a class="nav-link" href="/about">About</a>
             </li>
           </ul>
