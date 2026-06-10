@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1 class="page-title">Card Data Per Encounter:</h1>
+    <br>
+    <h2>Savage:</h2>
+    <ul>
+        <li><a href="/encounter/vampfatale">Vamp Fatale</a></li>
+        <li><a href="/encounter/redhotanddeepblue">Red Hot and Deep Blue</a></li>
+        <li><a href="/encounter/thetyrant">The Tyrant</a></li>
+        <li><a href="/encounter/lindwurm">The Lindwurm</a></li>
+        <li><a href="/encounter/lindwurmii">The Lindwurm II</a></li>
+    </ul>
+    <h2>Extreme Trials:</h2>
+    <ul>
+        <li><a href="/encounter/doomtrain">Doomtrain</a></li>
+        <li><a href="/encounter/enuo">Enuo</a></li>
+    </ul>
+    <h2>Ultimate Raids:</h2>
+    <ul>
+        <li><a href="/encounter/futuresrewritten">Futures Rewritten</a></li>
+    </ul>
+    <h2>Notes:</h2>
+    <p>There are a lot of caveats to this data, especially in the case of Ultimates. Feel free to use this as a general priority, but keep in mind that this does not give perfect information.</p>
+    <p>At the end of the day you will get the best data for your group by analyzing your group's logs. The aim of this page is to get a general idea of how the jobs perform as card targets in individual fights.</p>
+    <p>Things to consider that this data does not display:</p>
+    <ul>
+        <li>Does a window have multiple targets?</li>
+        <li>Does a player have dance partner?</li>
+        <li>Is there a gear discrepancy?</li>
+        <li>Player skill.</li>
+    </ul>
+    
+    <p>At the moment, I do not have a considerable number of reports logged for older ultimates. If more data is uploaded to the card calc, I will include them here.</p>
+{% endblock %}

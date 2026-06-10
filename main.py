@@ -17,7 +17,7 @@ from cardcalc_cards import cardcalc
 PG_USER = os.environ['PG_USER']
 PG_PW = os.environ['PG_PASSWORD']
 
-PG_SERVER = "127.0.0.1"
+PG_SERVER = os.environ['PG_SERVER']
 PG_DB = "cardcalc"
 PG_PORT = "5432"
 
@@ -28,6 +28,7 @@ token = get_bearer_token()
 client = psycopg2.connect(database=PG_DB, host=PG_SERVER, user=PG_USER, password=PG_PW, port=PG_PORT)
 cur = client.cursor()
 
+# Database Setup
 cur.execute("CREATE TABLE IF NOT EXISTS reports(report_id TEXT, fight_id INT, results TEXT, actors TEXT, enc_name TEXT, enc_time TIME, enc_kill BOOLEAN, computed TEXT, difficulty INT);")
 cur.execute("CREATE TABLE IF NOT EXISTS counts(total_reports INT);")
 cur.execute("CREATE TABLE IF NOT EXISTS targets(job TEXT, cardId INT, encounterId TEXT, difficulty INT, average BIGINT, max BIGINT, total INT, opener BOOLEAN);")
@@ -186,7 +187,6 @@ def about():
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                                'favicon.ico', mimetype='image/png')
-
 
 @app.route('/<string:report_id>/<int:fight_id>')
 def calc(report_id, fight_id):
@@ -386,3 +386,17 @@ def encounter_report(encounter):
     melee_list = [opener_melee, non_opener_melee]
 
     return render_template('encounter.html', ranged_list=ranged_list, melee_list=melee_list, encounter=encounter)
+
+@app.route('/encounter', strict_slashes=False)
+def list_encounters():
+    if request.method == "GET":
+        return render_template('encounter-list.html')
+
+@app.route('/encounter-image/<string:encounter>')
+def get_encounter_image(encounter):
+    encounter = encounter.lower().replace(" ", "")
+    encounter = encounter + ".jpg"
+    file_path = os.path.join(app.root_path, 'static/icons')
+
+    if not os.path.isfile(os.path.join(file_path, encounter)): return "Requested Image Not Found", 404
+    return send_from_directory(file_path, encounter)

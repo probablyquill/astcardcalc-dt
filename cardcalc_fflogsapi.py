@@ -147,6 +147,10 @@ query reportData($code: String!) {
 }
 """
     data = call_fflogs_api(query, variables, token)
+
+    # Check to see if the log is private or unavailable. I don't love grabbing the message like this because it feels prone to breaking, 
+    # but it works for the moment. 
+    if ('errors' in data): raise CardCalcException(f"{data['errors'][0]['message']}")
     
     fights = data['data']['reportData']['report']['fights']
 
