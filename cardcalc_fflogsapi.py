@@ -277,7 +277,7 @@ def get_damage_events(fight_info: FightInfo, token):
         'startTime': fight_info.start,
         'endTime': fight_info.end,
     }
-    query = """
+    damageQuery = """
 query reportData($code: String!, $startTime: Float!, $endTime: Float!) {
     reportData {
         report(code: $code) {
@@ -300,15 +300,14 @@ query reportData($code: String!, $startTime: Float!, $endTime: Float!) {
                 data
             }
 
-            tickDamage: events(
-                startTime: $startTime,
-                endTime: $endTime,
-                dataType: DamageDone,
-                limit: 10000,
-                filterExpression: "isTick='true' and ability.id != 500000"
-            ) {
-                data
-            }
+        }
+    }
+}
+""" 
+    tickQuery = """query reportData($code: String!, $startTime: Float!, $endTime: Float!) {
+    reportData {
+        report(code: $code) {
+        
             tickEvents: events(
                 startTime: $startTime,
                 endTime: $endTime,
@@ -328,21 +327,32 @@ query reportData($code: String!, $startTime: Float!, $endTime: Float!) {
             ) {
                 data
             }
+            tickDamage: events(
+                startTime: $startTime,
+                endTime: $endTime,
+                dataType: DamageDone,
+                limit: 10000,
+                filterExpression: "isTick='true' and ability.id != 500000"
+            ) {
+                data
+            }
         }
     }
-}
-""" 
+}"""
 # Tick Events -> filterExpression id not in ?, ?, ?, ?
 # Ground Events -> filterExpression id in Salted Earth, Doton, Slipstream, ?, ?, ?
 
-    data = call_fflogs_api(query, variables, token)
+    # Due to query limits, obtaining the damage requires two requests.
+    damageData = call_fflogs_api(damageQuery, variables, token)
+    tickData = call_fflogs_api(tickQuery, variables, token)
 
-    prep_damages = data['data']['reportData']['report']['damagePrep']['data']
-    base_damages = data['data']['reportData']['report']['damage']['data']
+    prep_damages = damageData['data']['reportData']['report']['damagePrep']['data']
+    base_damages = damageData['data']['reportData']['report']['damage']['data']
 
-    tick_damages = data['data']['reportData']['report']['tickDamage']['data']
-    tick_events = data['data']['reportData']['report']['tickEvents']['data']
-    ground_events = data['data']['reportData']['report']['groundEvents']['data']
+    tick_damages = tickData['data']['reportData']['report']['tickDamage']['data']
+    
+    tick_events = tickData['data']['reportData']['report']['tickEvents']['data']
+    ground_events = tickData['data']['reportData']['report']['groundEvents']['data']
 
     combined_tick_events = sorted((tick_damages + tick_events + ground_events),
                                   key=lambda tick: (tick['timestamp'], _event_priority(tick['type'])))
@@ -352,4 +362,5 @@ query reportData($code: String!, $startTime: Float!, $endTime: Float!) {
         'prepDamage': prep_damages,
         'tickDamage': combined_tick_events,
     }
+
     return damage_events
